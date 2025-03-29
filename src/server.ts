@@ -1,7 +1,7 @@
 import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import price from "./routes/coingecko-price";
+import price from "./routes/prices";
 
 dotenv.config();
 
@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(cors());
 
 // Routes
-app.use("/coingecko-price", price);
+app.use("/prices", price);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Alpha Pit PvP API is running!");
