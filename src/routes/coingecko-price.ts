@@ -5,15 +5,17 @@ import dotenv from "dotenv";
 dotenv.config();
 const router = Router();
 
-const LIVE_COIN_WATCH_API = "https://api.livecoinwatch.com/overview";
-const API_KEY = process.env.LIVE_COIN_WATCH_API_KEY;
+const COINGECKO_API = `${process.env.COINGECKO_API_URL}/simple/price` as string;
+const API_KEY = process.env.COINGECKO_API_KEY as string;
 
-router.post("/", async (req: Request, res: Response) => {
+router.get("/", async (req: Request, res: Response) => {
   try {
-    const response = await axios.post(
-      LIVE_COIN_WATCH_API,
-      { currency: "USD" },
-      { 
+    const response = await axios.get(
+        COINGECKO_API,
+      { params: {
+        ids: "bitcoin,ethereum", // Adjust based on required cryptocurrencies
+        vs_currencies: "usd",
+      },
         headers: { 
           "x-api-key": API_KEY, 
           "Content-Type": "application/json" 
