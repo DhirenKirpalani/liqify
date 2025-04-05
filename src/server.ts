@@ -9,6 +9,8 @@ import coinData from "./routes/coin-data";
 import coinDetails from "./routes/coin-details";
 import coinDetailsHistory from "./routes/coin-details-history";
 import liveCoinWatchOverview from "./routes/livecoinwatch-overview";
+import pythStream from "./routes/pyth-stream";
+import priceStream from "./routes/price-stream";
 
 dotenv.config();
 
@@ -28,6 +30,8 @@ app.use("/coin-data", coinData);
 app.use("/coin-details", coinDetails);
 app.use("/coin-details-history", coinDetailsHistory);
 app.use("/livecoinwatch-overview", liveCoinWatchOverview);
+app.use("/pyth-stream", pythStream);
+app.use("/price-stream", priceStream);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Alpha Pit PvP API is running!");
