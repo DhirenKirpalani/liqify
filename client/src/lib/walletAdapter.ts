@@ -21,7 +21,7 @@ const getProvider = (): PhantomProvider | null => {
   return null;
 };
 
-// Create wallet adapter class - this doesn't use hooks
+// Wallet Adapter Class
 export class WalletAdapter {
   provider: PhantomProvider | null;
   connected: boolean;
@@ -38,15 +38,8 @@ export class WalletAdapter {
       console.error("Phantom wallet not found");
       throw new Error("Phantom wallet not found");
     }
-    
+
     try {
-      // In development environment, simulate a connection
-      if (typeof window !== 'undefined' && !(window as any).solana) {
-        this.connected = true;
-        this.address = "SimulatedWallet" + Math.floor(Math.random() * 10000);
-        return this.address;
-      }
-      
       const response = await this.provider.connect({ onlyIfTrusted: false });
       this.address = response.publicKey.toString();
       this.connected = true;
@@ -56,10 +49,10 @@ export class WalletAdapter {
       throw error;
     }
   };
-  
+
   disconnect = async (): Promise<void> => {
     if (!this.provider) return;
-    
+
     try {
       await this.provider.disconnect();
       this.address = null;
@@ -69,12 +62,12 @@ export class WalletAdapter {
       throw error;
     }
   };
-  
+
   signMessage = async (message: string): Promise<Uint8Array> => {
     if (!this.provider || !this.address) {
       throw new Error("Wallet not connected");
     }
-    
+
     try {
       const encodedMessage = new TextEncoder().encode(message);
       const signedMessage = await this.provider.signMessage(encodedMessage);
@@ -84,13 +77,11 @@ export class WalletAdapter {
       throw error;
     }
   };
-  
-  getBalance = async (): Promise<{ sol: number, arena: number }> => {
+
+  getBalance = async (): Promise<{ sol: number; arena: number }> => {
     if (!this.address) return { sol: 0, arena: 0 };
-    
+
     try {
-      // This is where you would make a real request to the Solana RPC
-      // For now, return mock data
       return {
         sol: 2.45,
         arena: 750,
@@ -102,5 +93,4 @@ export class WalletAdapter {
   };
 }
 
-// Create a singleton instance
 export const walletAdapter = new WalletAdapter();

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
-import { walletAdapter } from '@/lib/walletAdapter';
-import { useToast } from '@/hooks/use-toast';
+import { walletAdapter } from '@/lib/walletAdapter';  // Adjust path
+import { useToast } from '@/hooks/use-toast';  // Adjust path
 
 // Types
 type UserProfile = {
@@ -44,23 +44,27 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // Initialize wallet adapter
+  // Load user profile from localStorage if available
   useEffect(() => {
-    // Set initial state from wallet adapter
-    setConnected(walletAdapter.connected);
-    setAddress(walletAdapter.address || '');
-    
-    if (walletAdapter.connected && walletAdapter.address) {
-      fetchBalances();
+    const savedProfile = localStorage.getItem('userProfile');
+    if (savedProfile) {
+      setUserProfile(JSON.parse(savedProfile));
     }
-    
-    // Check for saved session
+
+    // Try to reconnect the wallet if the address is stored
     const savedAddress = localStorage.getItem('walletAddress');
     if (savedAddress && !connected) {
-      // Try to reconnect automatically
-      walletAdapter.connect().catch(() => {
+      walletAdapter.connect().then(() => {
+        setConnected(true);
+        setAddress(savedAddress);
+        fetchBalances();
+      }).catch(() => {
         localStorage.removeItem('walletAddress');
       });
+    } else if (walletAdapter.connected) {
+      setConnected(true);
+      setAddress(walletAdapter.address || '');
+      fetchBalances();
     }
   }, [connected, fetchBalances]);
 
@@ -73,11 +77,12 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('walletAddress', publicKey || '');
       
       await fetchBalances();
-      
-      // Fetch user profile or create one
+
+      // Fetch or create a user profile and store it in localStorage
       const profile = { username: 'User' + Math.floor(Math.random() * 1000) };
       setUserProfile(profile);
-      
+      localStorage.setItem('userProfile', JSON.stringify(profile));
+
       toast({
         title: 'Wallet Connected',
         description: 'Your Phantom wallet has been connected successfully',
@@ -101,6 +106,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       setAddress('');
       setUserProfile(null);
       localStorage.removeItem('walletAddress');
+      localStorage.removeItem('userProfile');
     } catch (error) {
       console.error('Failed to disconnect wallet:', error);
       toast({

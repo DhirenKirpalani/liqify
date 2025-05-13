@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import phantomLogo from "@/components/assets/White Ghost_docs_nu.svg";
 
 interface WalletConnectModalProps {
   show: boolean;
@@ -32,7 +33,7 @@ export default function WalletConnectModal({ show, onClose, onConnect }: WalletC
         <div className="p-4 border border-neutral/20 rounded-lg mb-6 hover:border-accent-primary/50 transition-colors cursor-pointer" onClick={handleConnect}>
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-[#AB9FF2] flex items-center justify-center mr-4">
-              <img src="https://phantom.app/favicon.ico" alt="Phantom" className="w-6 h-6" />
+              <img src={phantomLogo} alt="Phantom" className="w-6 h-6" />
             </div>
             <div>
               <h3 className="font-medium">Phantom</h3>

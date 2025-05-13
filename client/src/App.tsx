@@ -16,6 +16,7 @@ import Leaderboard from "@/pages/Leaderboard";
 import Reels from "@/pages/Reels";
 import Profile from "@/pages/Profile";
 import Admin from "@/pages/Admin";
+import CandlestickChartPage from "@/pages/CandlestickChart";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -30,6 +31,7 @@ function Router() {
           <Route path="/reels" component={Reels} />
           <Route path="/profile" component={Profile} />
           <Route path="/admin" component={Admin} />
+          <Route path="/charts/:symbol" component={CandlestickChartPage} />
           <Route component={NotFound} />
         </Switch>
       </main>
