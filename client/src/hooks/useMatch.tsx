@@ -45,7 +45,7 @@
 //   matchSummary: MatchSummary | null;
 //   timeRemaining: number;
 //   joinQueue: () => Promise<void>;
-//   createFriendMatch: () => Promise<string>;
+//   createFriendMatch: (market?: string, duration?: number) => Promise<string>;
 //   joinMatch: (matchId: string) => Promise<void>;
 //   spectateMatch: (matchId: string) => Promise<void>;
 //   forfeitMatch: () => Promise<void>;
@@ -183,7 +183,7 @@
 //   }, [connected, address, toast]);
 
 //   // Create a friend match (with invite code)
-//   const createFriendMatch = useCallback(async () => {
+//   const createFriendMatch = useCallback(async (market = 'BTC/USDC', duration = 1800) => {
 //     if (!connected) {
 //       throw new Error('Wallet not connected');
 //     }
@@ -192,7 +192,11 @@
 //       const response = await apiRequest({
 //         url: '/api/matches/create',
 //         method: 'POST',
-//         body: { address },
+//         body: { 
+//           address,
+//           market,
+//           duration 
+//         },
 //       });
 //       const data = await response.json();
       
@@ -833,14 +837,33 @@ export const MatchProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [connected, address]);
 
-  // Join an existing match by ID
-  const joinMatch = useCallback(async (matchId: string) => {
+  // Join an existing match by invite code
+  const joinMatch = useCallback(async (inviteCode: string) => {
     if (!connected) {
       throw new Error('Wallet not connected');
     }
     
     try {
-      await apiRequest(`/api/matches/${matchId}/join`, { address });
+      // First, look up the match ID using the invite code
+      console.log('Looking up match with invite code:', inviteCode);
+      const lookupResponse = await apiRequest({
+        url: `/api/matches/code/${inviteCode}`,
+        method: 'GET'
+      });
+      const lookupData = await lookupResponse.json();
+      
+      if (!lookupData.matchId) {
+        throw new Error('Invalid invite code');
+      }
+      
+      console.log('Found match with ID:', lookupData.matchId);
+      
+      // Now join the match using the actual match ID
+      await apiRequest({
+        url: `/api/matches/${lookupData.matchId}/join`,
+        method: 'POST',
+        body: { address }
+      });
       
       // Server will send match_found event via WebSocket
     } catch (error) {
@@ -942,6 +965,8 @@ export const useMatch = () => {
   }
   return context;
 };
+
+
 
 
 

@@ -353,10 +353,14 @@
   
 //   app.post('/api/matches/create', async (req: Request, res: Response) => {
 //     try {
-//       const { address } = walletAddressSchema.parse(req.body);
-//       console.log("Received address:", address);  // <-- log input address
+//       // Extract market and duration from request if available
+//       const { address, market, duration } = req.body;
+//       const validAddress = walletAddressSchema.parse({ address }).address;
+//       console.log("Received address:", validAddress);  // <-- log input address
+//       console.log("Received market:", market); 
+//       console.log("Received duration:", duration);
       
-//       const user = await storage.getUserByWalletAddress(address);
+//       const user = await storage.getUserByWalletAddress(validAddress);
 //       console.log("Found user:", user);  // <-- log lookup result
 //       if (!user) {
 //         return res.status(404).json({ message: "User not found" });
@@ -370,8 +374,8 @@
 //         matchCode: inviteCode,
 //         status: 'pending',
 //         player1Id: user.id,
-//         market: chooseRandomMarket(),
-//         duration: 1800, // 30 minutes
+//         market: market || chooseRandomMarket(), // Use provided market or choose random
+//         duration: duration ? parseInt(duration) : 1800, // Use provided duration or default to 30 minutes
 //         isGroupMatch: false
 //       });
       
@@ -2015,6 +2019,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Lookup match by invite code
+  app.get('/api/matches/code/:inviteCode', async (req: Request, res: Response) => {
+    try {
+      const { inviteCode } = req.params;
+      
+      if (!inviteCode) {
+        return res.status(400).json({ message: "Invite code is required" });
+      }
+      
+      // Find match with this invite code
+      const match = await storage.getMatchByCode(inviteCode);
+      
+      if (!match) {
+        return res.status(404).json({ message: "Match not found with this invite code" });
+      }
+      
+      return res.json({ matchId: match.id, status: match.status });
+    } catch (error) {
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
   app.get('/api/matches/live', async (req: Request, res: Response) => {
     try {
       const activeMatches = await storage.getActiveMatches();
@@ -3255,4 +3281,5 @@ function getMockPrice(market: string): number {
   
   return basePrice * (1 + variation);
 }
+
 
