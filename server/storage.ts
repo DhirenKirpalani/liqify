@@ -118,14 +118,14 @@ export class MemStorage implements IStorage {
     this.createUser({ 
       username: "CryptoWhale", 
       password: "password", 
-      walletAddress: "7xz4jk2k8j2k",
+      walletAddress: "5o94BcTKC4RuSgj5x25htTZtwo1Apt53KZMmUg3f7cx6",
       role: "admin"
     });
     this.createUser({ 
       username: "TraderRex", 
       password: "password", 
-      walletAddress: "98s7djh2o8k2",
-      role: "moderator"
+      walletAddress: "DLVp4WpxtkeeHayK1th66BbNZMGpV6cz3s7WzLcNfwCh",
+      role: "admin"
     });
     this.createUser({ 
       username: "MoonHunter", 
@@ -203,11 +203,16 @@ export class MemStorage implements IStorage {
     const id = this.userIdCounter++;
     const now = new Date();
     const newUser: User = { 
-      ...user, 
-      id, 
-      arenaTokens: 0, 
-      xp: 0, 
-      createdAt: now 
+      id,
+      role: user.role ?? "user",
+      username: user.username,
+      password: user.password,
+      walletAddress: user.walletAddress ?? null,
+      avatar: user.avatar ?? null,
+      bio: user.bio ?? null,
+      arenaTokens: 0,
+      xp: 0,
+      createdAt: now
     };
     this.users.set(id, newUser);
     
@@ -267,7 +272,14 @@ export class MemStorage implements IStorage {
       player1Pnl: 0, 
       player2Pnl: 0, 
       spectators: [],
-      createdAt: now 
+      createdAt: now,
+      startTime: null,
+      endTime: null,
+      winnerId: null,
+      status: match.status ?? 'pending',
+      player2Id: match.player2Id ?? null,
+      duration: match.duration ?? 0, // Ensure duration is always a number
+      isGroupMatch: match.isGroupMatch !== undefined ? match.isGroupMatch ?? null : null
     };
     this.matches.set(id, newMatch);
     return newMatch;
@@ -318,7 +330,10 @@ export class MemStorage implements IStorage {
       id, 
       pnl: 0, 
       openTime: now,
-      status: 'open'
+      exitPrice: null,
+      closeTime: null,
+      status: 'open',
+      matchId: position.matchId !== undefined ? position.matchId : null
     };
     this.positions.set(id, newPosition);
     return newPosition;
@@ -345,7 +360,7 @@ export class MemStorage implements IStorage {
     return Array.from(this.activities.values())
       .filter((activity) => activity.matchId === matchId)
       .sort((a, b) => 
-        b.createdAt.getTime() - a.createdAt.getTime()
+        (b.createdAt ? b.createdAt.getTime() : 0) - (a.createdAt ? a.createdAt.getTime() : 0)
       );
   }
   
@@ -353,9 +368,12 @@ export class MemStorage implements IStorage {
     const id = this.activityIdCounter++;
     const now = new Date();
     const newActivity: Activity = { 
-      ...activity, 
-      id, 
-      createdAt: now 
+      id,
+      createdAt: now,
+      type: activity.type,
+      userId: activity.userId !== undefined ? activity.userId : null,
+      matchId: activity.matchId !== undefined ? activity.matchId : null,
+      details: activity.details !== undefined ? activity.details : null
     };
     this.activities.set(id, newActivity);
     return newActivity;
@@ -364,28 +382,35 @@ export class MemStorage implements IStorage {
   // Reel operations
   async getReels(): Promise<Reel[]> {
     return Array.from(this.reels.values())
-      .sort((a, b) => 
-        b.createdAt.getTime() - a.createdAt.getTime()
-      );
+      .sort((a, b) => {
+        const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+        const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+        return bTime - aTime;
+      });
   }
   
   async getUserReels(userId: number): Promise<Reel[]> {
     return Array.from(this.reels.values())
       .filter((reel) => reel.userId === userId)
-      .sort((a, b) => 
-        b.createdAt.getTime() - a.createdAt.getTime()
-      );
+      .sort((a, b) => {
+        const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+        const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+        return bTime - aTime;
+      });
   }
   
   async createReel(reel: InsertReel): Promise<Reel> {
     const id = this.reelIdCounter++;
     const now = new Date();
-    const newReel: Reel = { 
-      ...reel, 
-      id, 
-      likes: 0, 
-      views: 0, 
-      createdAt: now 
+    const newReel: Reel = {
+      id,
+      createdAt: now,
+      matchId: reel.matchId !== undefined ? reel.matchId : null,
+      userId: reel.userId,
+      videoUrl: reel.videoUrl,
+      caption: reel.caption !== undefined ? reel.caption : null,
+      likes: 0,
+      views: 0
     };
     this.reels.set(id, newReel);
     return newReel;
@@ -395,7 +420,7 @@ export class MemStorage implements IStorage {
     const reel = this.reels.get(reelId);
     if (!reel) throw new Error('Reel not found');
     
-    const updatedReel = { ...reel, likes: reel.likes + 1 };
+    const updatedReel = { ...reel, likes: (reel.likes ?? 0) + 1 };
     this.reels.set(reelId, updatedReel);
   }
 
@@ -450,7 +475,7 @@ export class MemStorage implements IStorage {
   // Leaderboard operations
   async getLeaderboard(): Promise<LeaderboardEntry[]> {
     return Array.from(this.leaderboardEntries.values())
-      .sort((a, b) => a.rank - b.rank);
+      .sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0));
   }
   
   async updateLeaderboardEntry(userId: number, updates: Partial<LeaderboardEntry>): Promise<LeaderboardEntry | undefined> {
@@ -508,7 +533,10 @@ export class MemStorage implements IStorage {
       ...featureFlag, 
       id, 
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
+      description: featureFlag.description !== undefined ? featureFlag.description : null,
+      enabled: featureFlag.enabled !== undefined ? featureFlag.enabled : false,
+      configValue: featureFlag.configValue !== undefined ? featureFlag.configValue : {},
     };
     this.featureFlags.set(id, newFeatureFlag);
     return newFeatureFlag;
@@ -531,13 +559,21 @@ export class MemStorage implements IStorage {
   // System metrics operations
   async getSystemMetrics(): Promise<SystemMetric[]> {
     return Array.from(this.systemMetrics.values())
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+      .sort((a, b) => {
+        const bTime = b.timestamp ? b.timestamp.getTime() : 0;
+        const aTime = a.timestamp ? a.timestamp.getTime() : 0;
+        return bTime - aTime;
+      });
   }
   
   async getSystemMetricsByName(name: string): Promise<SystemMetric[]> {
     return Array.from(this.systemMetrics.values())
       .filter((metric) => metric.name === name)
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+      .sort((a, b) => {
+        const bTime = b.timestamp ? b.timestamp.getTime() : 0;
+        const aTime = a.timestamp ? a.timestamp.getTime() : 0;
+        return bTime - aTime;
+      });
   }
   
   async createSystemMetric(metric: InsertSystemMetric): Promise<SystemMetric> {
@@ -547,6 +583,7 @@ export class MemStorage implements IStorage {
     const newMetric: SystemMetric = { 
       ...metric, 
       id, 
+      value: metric.value !== undefined ? metric.value : null,
       timestamp: now
     };
     this.systemMetrics.set(id, newMetric);

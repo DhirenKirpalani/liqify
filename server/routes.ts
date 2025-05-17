@@ -354,8 +354,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/matches/create', async (req: Request, res: Response) => {
     try {
       const { address } = walletAddressSchema.parse(req.body);
+      console.log("Received address:", address);  // <-- log input address
       
       const user = await storage.getUserByWalletAddress(address);
+      console.log("Found user:", user);  // <-- log lookup result
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
