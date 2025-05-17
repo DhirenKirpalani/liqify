@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { createChart, IChartApi, CandlestickData, Time } from "lightweight-charts";
 import { useBinanceCandlestickChart } from "@/hooks/useBinanceCandlestickChart";
 
@@ -37,16 +37,26 @@ export default function CandlestickChart({ symbol, interval }: Props) {
 
     const candleSeries = chart.addCandlestickSeries();
 
-    const chartData: CandlestickData[] = candles.map((candle) => ({
-      time: (candle.time / 1000) as Time, // Convert milliseconds to seconds and cast to Time
-      open: candle.open,
-      high: candle.high,
-      low: candle.low,
-      close: candle.close,
-    }));
+    // Map and sort candles by time ascending
+    const chartData: CandlestickData[] = candles
+      .map((candle) => ({
+        time: (candle.time / 1000) as Time, // Convert ms to seconds
+        open: candle.open,
+        high: candle.high,
+        low: candle.low,
+        close: candle.close,
+      }))
+      .sort((a, b) => (a.time as number) - (b.time as number))  // Sort ascending
+      .filter((candle, index, arr) => {
+        // Remove duplicate times by keeping only the first occurrence
+        if (index === 0) return true;
+        return (candle.time as number) > (arr[index - 1].time as number);
+      });
+    // Sort ascending by time
 
     candleSeries.setData(chartData);
 
+    // Handle chart container resizing
     const resizeObserver = new ResizeObserver(() => {
       if (chartContainerRef.current) {
         chart.applyOptions({
@@ -61,7 +71,8 @@ export default function CandlestickChart({ symbol, interval }: Props) {
       resizeObserver.disconnect();
       chart.remove();
     };
-  }, [candles, interval]); // Re-run whenever `candles` or `interval` changes
+  }, [candles, interval]);
 
   return <div ref={chartContainerRef} className="w-full h-[400px]" />;
 }
+

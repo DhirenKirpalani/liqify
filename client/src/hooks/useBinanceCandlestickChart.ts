@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 export interface Candle {
-  time: number;  // time in milliseconds
+  time: number;  // time in milliseconds (UTC)
   open: number;
   high: number;
   low: number;
@@ -20,10 +20,10 @@ export const useBinanceCandlestickChart = (symbol: string, interval: string) => 
       );
       const data = await res.json();
       const formatted = data.map((d: any) => {
-        const timeInMs = d[0]; // Binance returns time in milliseconds
-        console.log("Raw Time (ms):", timeInMs);  // Log to verify the time
+        const timeInMs = d[0]; // Binance returns time in milliseconds UTC
+        console.log("Raw Time (ms):", timeInMs);  // Log raw time for debug
         return {
-          time: timeInMs,  // Keep the time in milliseconds
+          time: timeInMs,  // Keep time in ms UTC
           open: parseFloat(d[1]),
           high: parseFloat(d[2]),
           low: parseFloat(d[3]),
@@ -42,21 +42,23 @@ export const useBinanceCandlestickChart = (symbol: string, interval: string) => 
         const json = JSON.parse(event.data);
         const k = json.k;
         const newCandle: Candle = {
-          time: k.t,  // time in milliseconds
+          time: k.t,  // time in milliseconds UTC
           open: parseFloat(k.o),
           high: parseFloat(k.h),
           low: parseFloat(k.l),
           close: parseFloat(k.c),
         };
 
-        console.log("WebSocket Raw Time (ms):", newCandle.time);  // Log to verify the WebSocket time
+        console.log("WebSocket Raw Time (ms):", newCandle.time);
 
         setCandles((prev) => {
           const last = prev[prev.length - 1];
           if (last?.time === newCandle.time) {
-            return [...prev.slice(0, -1), newCandle]; // update last
+            // Update last candle if timestamp matches
+            return [...prev.slice(0, -1), newCandle];
           } else {
-            return [...prev, newCandle]; // append new
+            // Append new candle
+            return [...prev, newCandle];
           }
         });
       };
@@ -69,21 +71,20 @@ export const useBinanceCandlestickChart = (symbol: string, interval: string) => 
     };
   }, [symbol, interval]);
 
-  // Convert UTC timestamp to local time
+  // Convert UTC timestamp to local time string for logging/display
   const formatTime = (time: number) => {
-    const date = new Date(time); // Convert timestamp to Date object
-    // Adjust for local time zone difference
-    const localTime = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-    return localTime.toLocaleString(); // Return the localized time
+    const date = new Date(time); // Create Date object from UTC ms timestamp
+    return date.toLocaleString(); // Automatically converts to local timezone
   };
 
+  // Add formatted time for display/debugging only
   const formattedCandles = candles.map((candle) => ({
     ...candle,
-    formattedTime: formatTime(candle.time), // Add formatted time to candles
+    formattedTime: formatTime(candle.time),
   }));
 
-  // Log the candles with formatted time
   console.log("Formatted Candles:", formattedCandles);
 
   return formattedCandles;
 };
+
