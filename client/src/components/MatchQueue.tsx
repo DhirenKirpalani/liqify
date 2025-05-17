@@ -3,11 +3,24 @@
 // import { useWallet } from "@/hooks/useWallet";
 // import { useMatch } from "@/hooks/useMatch";
 // import { useToast } from "@/hooks/use-toast";
+// import { useState } from "react";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select";
+// import { Label } from "@/components/ui/label";
 
 // export default function MatchQueue() {
 //   const { connected } = useWallet();
 //   const { joinQueue, createFriendMatch } = useMatch();
 //   const { toast } = useToast();
+  
+//   // State for currency pair and duration
+//   const [currencyPair, setCurrencyPair] = useState("BTC/USDC");
+//   const [duration, setDuration] = useState("30"); // in minutes
 
 //   const handleJoinQueue = async () => {
 //     if (!connected) {
@@ -45,7 +58,11 @@
 //     }
 
 //     try {
-//       const inviteCode = await createFriendMatch();
+//       // Convert duration from minutes to seconds
+//       const durationInSeconds = parseInt(duration) * 60;
+      
+//       // Pass currency pair and duration to the createFriendMatch function
+//       const inviteCode = await createFriendMatch(currencyPair, durationInSeconds);
 //       toast({
 //         title: "Invite Created",
 //         description: `Share this code with your friend: ${inviteCode}`,
@@ -103,10 +120,49 @@
 //             </div>
 //             <h3 className="text-lg font-bold mb-1">Challenge a Friend</h3>
 //             <p className="text-text-secondary text-sm mb-4">Invite a friend to a private trading match.</p>
-//             <div className="flex items-center text-xs text-text-secondary mb-6">
+            
+//             <div className="space-y-4 mb-4">
+//               <div>
+//                 <Label htmlFor="currency-pair" className="text-sm">Currency Pair</Label>
+//                 <Select 
+//                   value={currencyPair} 
+//                   onValueChange={setCurrencyPair}
+//                 >
+//                   <SelectTrigger id="currency-pair" className="w-full mt-1">
+//                     <SelectValue placeholder="Select a currency pair" />
+//                   </SelectTrigger>
+//                   <SelectContent>
+//                     <SelectItem value="BTC/USDC">BTC/USDC</SelectItem>
+//                     <SelectItem value="ETH/USDC">ETH/USDC</SelectItem>
+//                     <SelectItem value="SOL/USDC">SOL/USDC</SelectItem>
+//                     <SelectItem value="ADA/USDC">ADA/USDC</SelectItem>
+//                     <SelectItem value="XRP/USDC">XRP/USDC</SelectItem>
+//                   </SelectContent>
+//                 </Select>
+//               </div>
+              
+//               <div>
+//                 <Label htmlFor="match-duration" className="text-sm">Match Duration</Label>
+//                 <Select 
+//                   value={duration} 
+//                   onValueChange={setDuration}
+//                 >
+//                   <SelectTrigger id="match-duration" className="w-full mt-1">
+//                     <SelectValue placeholder="Select duration" />
+//                   </SelectTrigger>
+//                   <SelectContent>
+//                     <SelectItem value="15">15 Minutes</SelectItem>
+//                     <SelectItem value="30">30 Minutes</SelectItem>
+//                     <SelectItem value="60">60 Minutes</SelectItem>
+//                   </SelectContent>
+//                 </Select>
+//               </div>
+//             </div>
+            
+//             <div className="flex items-center text-xs text-text-secondary mb-4">
 //               <div className="flex items-center mr-4">
 //                 <i className="ri-time-line mr-1"></i>
-//                 <span>Custom</span>
+//                 <span>{duration} min</span>
 //               </div>
 //               <div className="flex items-center">
 //                 <i className="ri-user-line mr-1"></i>
@@ -176,9 +232,25 @@ export default function MatchQueue() {
   const { joinQueue, createFriendMatch } = useMatch();
   const { toast } = useToast();
   
-  // State for currency pair and duration
-  const [currencyPair, setCurrencyPair] = useState("BTC/USDC");
-  const [duration, setDuration] = useState("30"); // in minutes
+  // Get saved preferences from localStorage or use defaults
+  const [currencyPair, setCurrencyPair] = useState(() => {
+    return localStorage.getItem('preferredCurrencyPair') || "BTC/USDC";
+  });
+  
+  const [duration, setDuration] = useState(() => {
+    return localStorage.getItem('preferredDuration') || "30";
+  }); // in minutes
+  
+  // Update localStorage when preferences change
+  const updateCurrencyPair = (value: string) => {
+    setCurrencyPair(value);
+    localStorage.setItem('preferredCurrencyPair', value);
+  };
+  
+  const updateDuration = (value: string) => {
+    setDuration(value);
+    localStorage.setItem('preferredDuration', value);
+  };
 
   const handleJoinQueue = async () => {
     if (!connected) {
@@ -284,7 +356,7 @@ export default function MatchQueue() {
                 <Label htmlFor="currency-pair" className="text-sm">Currency Pair</Label>
                 <Select 
                   value={currencyPair} 
-                  onValueChange={setCurrencyPair}
+                  onValueChange={updateCurrencyPair}
                 >
                   <SelectTrigger id="currency-pair" className="w-full mt-1">
                     <SelectValue placeholder="Select a currency pair" />
@@ -303,7 +375,7 @@ export default function MatchQueue() {
                 <Label htmlFor="match-duration" className="text-sm">Match Duration</Label>
                 <Select 
                   value={duration} 
-                  onValueChange={setDuration}
+                  onValueChange={updateDuration}
                 >
                   <SelectTrigger id="match-duration" className="w-full mt-1">
                     <SelectValue placeholder="Select duration" />
@@ -369,4 +441,5 @@ export default function MatchQueue() {
     </div>
   );
 }
+
 
