@@ -12,11 +12,87 @@
 //   SelectValue,
 // } from "@/components/ui/select";
 // import { Label } from "@/components/ui/label";
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogDescription,
+//   DialogFooter,
+//   DialogHeader,
+//   DialogTitle,
+// } from "@/components/ui/dialog";
+// import { Input } from "@/components/ui/input";
+
+// // Invite Modal Component
+// function InviteModal({ inviteCode, isOpen, onClose }: { inviteCode: string, isOpen: boolean, onClose: () => void }) {
+//   const copyToClipboard = () => {
+//     navigator.clipboard.writeText(inviteCode);
+    
+//     // Change button text temporarily to indicate copy was successful
+//     const copyButton = document.getElementById('copy-invite-button');
+//     if (copyButton) {
+//       const originalText = copyButton.textContent;
+//       copyButton.textContent = 'Copied!';
+      
+//       setTimeout(() => {
+//         copyButton.textContent = originalText;
+//       }, 2000);
+//     }
+//   };
+  
+//   return (
+//     <Dialog open={isOpen} onOpenChange={onClose}>
+//       <DialogContent className="sm:max-w-md">
+//         <DialogHeader>
+//           <DialogTitle>Invite Created</DialogTitle>
+//           <DialogDescription>
+//             Share this invite code with your friend to start a private match.
+//           </DialogDescription>
+//         </DialogHeader>
+        
+//         <div className="flex items-center space-x-2 my-4">
+//           <div className="grid flex-1 gap-2">
+//             <Label htmlFor="invite-code" className="sr-only">Invite Code</Label>
+//             <Input
+//               id="invite-code"
+//               value={inviteCode}
+//               readOnly
+//               className="text-center text-lg font-bold tracking-wider"
+//             />
+//           </div>
+//           <Button id="copy-invite-button" onClick={copyToClipboard} className="px-3">
+//             <i className="ri-clipboard-line mr-2"></i>
+//             Copy
+//           </Button>
+//         </div>
+        
+//         <div className="bg-neutral/10 p-4 rounded-lg space-y-3 my-2">
+//           <h4 className="font-medium">Next Steps:</h4>
+//           <ol className="list-decimal pl-5 space-y-2 text-sm">
+//             <li>Share this code with your friend</li>
+//             <li>Your friend needs to enter this code on their CryptoClash app</li>
+//             <li>Once they join, the match will start automatically</li>
+//             <li>The match will use {localStorage.getItem('preferredCurrencyPair') || "BTC/USDC"} with a duration of {localStorage.getItem('preferredDuration') || "30"} minutes</li>
+//           </ol>
+//         </div>
+        
+//         <DialogFooter className="sm:justify-center">
+//           <Button onClick={onClose} variant="outline">
+//             Close
+//           </Button>
+//         </DialogFooter>
+//       </DialogContent>
+//     </Dialog>
+//   );
+// }
 
 // export default function MatchQueue() {
 //   const { connected } = useWallet();
 //   const { joinQueue, createFriendMatch } = useMatch();
 //   const { toast } = useToast();
+  
+//   // Invite modal state
+//   const [showInviteModal, setShowInviteModal] = useState(false);
+//   const [currentInviteCode, setCurrentInviteCode] = useState("");
   
 //   // Get saved preferences from localStorage or use defaults
 //   const [currencyPair, setCurrencyPair] = useState(() => {
@@ -79,9 +155,15 @@
       
 //       // Pass currency pair and duration to the createFriendMatch function
 //       const inviteCode = await createFriendMatch(currencyPair, durationInSeconds);
+      
+//       // Store the invite code and show the modal
+//       setCurrentInviteCode(inviteCode);
+//       setShowInviteModal(true);
+      
+//       // Still show a toast notification for awareness
 //       toast({
 //         title: "Invite Created",
-//         description: `Share this code with your friend: ${inviteCode}`,
+//         description: "Match is ready! Share the invite code with your friend.",
 //       });
 //     } catch (error) {
 //       toast({
@@ -94,6 +176,12 @@
 
 //   return (
 //     <div className="mb-8">
+//       {/* Invite Modal */}
+//       <InviteModal 
+//         inviteCode={currentInviteCode} 
+//         isOpen={showInviteModal} 
+//         onClose={() => setShowInviteModal(false)}
+//       />
 //       <h2 className="text-2xl font-manrope font-bold mb-4">Ready to Trade?</h2>
 //       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 //         {/* Quick Match Card */}
@@ -317,12 +405,16 @@ function InviteModal({ inviteCode, isOpen, onClose }: { inviteCode: string, isOp
 
 export default function MatchQueue() {
   const { connected } = useWallet();
-  const { joinQueue, createFriendMatch } = useMatch();
+  const { joinQueue, createFriendMatch, joinMatch } = useMatch();
   const { toast } = useToast();
   
   // Invite modal state
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [currentInviteCode, setCurrentInviteCode] = useState("");
+  
+  // Join with invite code state
+  const [joinInviteCode, setJoinInviteCode] = useState("");
+  const [isJoining, setIsJoining] = useState(false);
   
   // Get saved preferences from localStorage or use defaults
   const [currencyPair, setCurrencyPair] = useState(() => {
@@ -369,6 +461,48 @@ export default function MatchQueue() {
     }
   };
 
+  // Handle joining a match with an invite code
+  const handleJoinWithInviteCode = async () => {
+    if (!connected) {
+      toast({
+        title: "Wallet Not Connected",
+        description: "Please connect your wallet to join a match",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!joinInviteCode.trim()) {
+      toast({
+        title: "Missing Invite Code",
+        description: "Please enter an invite code to join",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setIsJoining(true);
+      await joinMatch(joinInviteCode.trim());
+      
+      toast({
+        title: "Joining Match",
+        description: "Connecting to match...",
+      });
+      
+      // Clear the form
+      setJoinInviteCode("");
+    } catch (error) {
+      toast({
+        title: "Failed to Join Match",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsJoining(false);
+    }
+  };
+  
   const handleCreateInvite = async () => {
     if (!connected) {
       toast({
@@ -541,6 +675,45 @@ export default function MatchQueue() {
             </Button>
           </CardContent>
         </Card>
+        
+        {/* Join with Invite Code Section */}
+        <div className="mt-8">
+          <h2 className="text-2xl font-manrope font-bold mb-4">Join with Invite Code</h2>
+          <Card className="gradient-card rounded-xl p-5 border border-neutral/20 transition-all">
+            <CardContent className="p-0">
+              <div className="flex justify-between items-start mb-4">
+                <div className="bg-accent-primary/20 p-2 rounded-lg">
+                  <i className="ri-link-m text-xl text-accent-primary"></i>
+                </div>
+              </div>
+              <h3 className="text-lg font-bold mb-1">Enter Invite Code</h3>
+              <p className="text-text-secondary text-sm mb-4">Paste the invite code shared with you to join a friend's match.</p>
+              
+              <div className="flex space-x-2 mb-4">
+                <Input
+                  placeholder="Enter invite code here"
+                  value={joinInviteCode}
+                  onChange={(e) => setJoinInviteCode(e.target.value)}
+                  className="flex-1"
+                />
+                <Button 
+                  onClick={handleJoinWithInviteCode}
+                  disabled={isJoining || !joinInviteCode.trim()}
+                  className="whitespace-nowrap"
+                >
+                  {isJoining ? (
+                    <>
+                      <i className="ri-loader-4-line animate-spin mr-2"></i>
+                      Joining...
+                    </>
+                  ) : (
+                    <>Join Match</>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
