@@ -31,13 +31,35 @@ const TIMEFRAMES = [
 ];
 
 export default function TradingChart({ market: initialMarket }: TradingChartProps) {
-  // Allow changing the market within the component
-  const [selectedMarket, setSelectedMarket] = useState(initialMarket);
-  const [timeframe, setTimeframe] = useState("15");
+  // Load saved preferences from localStorage or use defaults
+  const getSavedMarket = () => {
+    const saved = localStorage.getItem('cryptoClash_selectedMarket');
+    return saved || initialMarket;
+  };
+  
+  const getSavedTimeframe = () => {
+    const saved = localStorage.getItem('cryptoClash_selectedTimeframe');
+    return saved || "15";
+  };
+  
+  // Allow changing the market within the component with persistence
+  const [selectedMarket, setSelectedMarket] = useState(getSavedMarket());
+  const [timeframe, setTimeframe] = useState(getSavedTimeframe());
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
   const [priceChange, setPriceChange] = useState({ value: 0, percentage: 0 });
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const { getMarketPrice } = useDrift();
+  
+  // Save preferences when they change
+  const handleMarketChange = (value: string) => {
+    setSelectedMarket(value);
+    localStorage.setItem('cryptoClash_selectedMarket', value);
+  };
+  
+  const handleTimeframeChange = (value: string) => {
+    setTimeframe(value);
+    localStorage.setItem('cryptoClash_selectedTimeframe', value);
+  };
   
   // Format price with proper decimal places
   const formatPrice = (price: number) => {
@@ -99,7 +121,7 @@ export default function TradingChart({ market: initialMarket }: TradingChartProp
           <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 w-full md:w-auto">
             <Select
               value={selectedMarket}
-              onValueChange={(value) => setSelectedMarket(value)}
+              onValueChange={handleMarketChange}
             >
               <SelectTrigger className="bg-bg-primary border-neutral/20 w-40 h-9 text-sm">
                 <SelectValue placeholder="Select market" />
@@ -131,7 +153,7 @@ export default function TradingChart({ market: initialMarket }: TradingChartProp
                 size="sm"
                 variant="ghost"
                 className={`text-xs h-9 px-3 ${timeframe === tf.value ? "bg-accent-primary/20 text-accent-primary" : "bg-bg-primary"}`}
-                onClick={() => setTimeframe(tf.value)}
+                onClick={() => handleTimeframeChange(tf.value)}
               >
                 {tf.label}
               </Button>
