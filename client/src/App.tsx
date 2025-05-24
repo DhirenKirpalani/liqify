@@ -8,7 +8,7 @@ import { WebSocketProvider } from "@/hooks/useWebSocket";
 import { WalletProvider } from "@/hooks/useWallet";
 import { MatchProvider } from "@/hooks/useMatch";
 
-import NavigationBar from "@/components/NavigationBar";
+import NavBar from "@/components/NavBar";
 import MobileNavigation from "@/components/MobileNavigation";
 import Home from "@/pages/Home";
 import Match from "@/pages/Match";
@@ -22,7 +22,7 @@ import NotFound from "@/pages/not-found";
 function Router() {
   return (
     <div className="flex flex-col h-screen bg-bg-primary text-text-primary overflow-hidden">
-      <NavigationBar />
+      <NavBar />
       <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">
         <Switch>
           <Route path="/" component={Home} />

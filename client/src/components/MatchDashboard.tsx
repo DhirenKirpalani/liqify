@@ -359,6 +359,7 @@
 // }
 
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -370,38 +371,93 @@ import { useMatch } from "@/hooks/useMatch";
 import { useToast } from "@/hooks/use-toast";
 
 export default function MatchDashboard() {
-  const { activeMatch, forfeitMatch, timeRemaining, formatTime, setActiveMatch } = useMatch();
+  const { activeMatch, forfeitMatch, timeRemaining, formatTime, setActiveMatch, resetMatch } = useMatch();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [showSpectators, setShowSpectators] = useState(false);
   
-  // Add debug logging to track activeMatch state
+  // Track and display timer locally to ensure it's accurate
+  const [localTimeRemaining, setLocalTimeRemaining] = useState<number | null>(null);
+  
+  // Initialize and maintain a local timer based on match data
   useEffect(() => {
-    console.log('MatchDashboard - activeMatch state:', activeMatch);
+    if (!activeMatch) return;
     
-    // Try to restore from localStorage if activeMatch is null
-    if (!activeMatch) {
-      const storedMatchData = localStorage.getItem('activeMatchData');
-      if (storedMatchData) {
-        try {
-          console.log('MatchDashboard - Restoring from localStorage');
-          const matchData = JSON.parse(storedMatchData);
-          setActiveMatch(matchData);
-        } catch (error) {
-          console.error('Failed to parse stored match data:', error);
+    // Initialize by calculating remaining time from match data
+    const calculateRemainingTime = () => {
+      try {
+        // Verify that we have valid times
+        if (!activeMatch.startTime || !activeMatch.duration) {
+          console.warn('Invalid match time data:', { 
+            startTime: activeMatch.startTime, 
+            duration: activeMatch.duration 
+          });
+          return 0;
         }
+        
+        // Ensure startTime is in seconds (not milliseconds)
+        let startTimeSec = activeMatch.startTime;
+        // If startTime is abnormally large (likely in milliseconds), convert to seconds
+        if (startTimeSec > 9999999999) { // Larger than year 2286
+          startTimeSec = Math.floor(startTimeSec / 1000);
+        }
+        
+        const startTimeMs = startTimeSec * 1000; // Convert to milliseconds
+        const durationSeconds = Math.min(3600, activeMatch.duration); // Cap duration at 1 hour
+        const currentTimeMs = Date.now();
+        const elapsedSeconds = Math.floor((currentTimeMs - startTimeMs) / 1000);
+        
+        // Validate the result is reasonable (between 0 and match duration)
+        const remaining = Math.max(0, Math.min(durationSeconds, durationSeconds - elapsedSeconds));
+        console.log('Time calculation:', { startTimeMs, now: currentTimeMs, elapsed: elapsedSeconds, remaining });
+        return remaining;
+      } catch (error) {
+        console.error('Error calculating time:', error);
+        return 0; // Default to 0 if calculation fails
       }
-    }
-  }, [activeMatch, setActiveMatch]);
+    };
+    
+    // Initial calculation
+    const initialRemaining = calculateRemainingTime();
+    console.log('Match timer - Initial calculation:', initialRemaining, 'seconds');
+    setLocalTimeRemaining(initialRemaining);
+    
+    // Set up local timer that updates every second
+    const timerInterval = setInterval(() => {
+      setLocalTimeRemaining(prev => {
+        if (prev === null || prev <= 0) return 0;
+        return prev - 1;
+      });
+    }, 1000);
+    
+    // Clean up
+    return () => clearInterval(timerInterval);
+  }, [activeMatch]);
+  
+  // Use our local timer instead of the one from useMatch if it's working
+  const displayTimeRemaining = localTimeRemaining !== null && localTimeRemaining > 0 
+    ? localTimeRemaining 
+    : timeRemaining;
 
   const handleForfeit = async () => {
     if (!activeMatch) return;
-
+    
     try {
+      // Call the forfeit API
       await forfeitMatch();
+      
+      // Manually update the match state
+      resetMatch(); // Clear active match state
+      localStorage.removeItem('activeMatchData'); // Remove from localStorage
+      
+      // Show success message
       toast({
         title: "Match Forfeited",
         description: "You have forfeited the current match",
       });
+      
+      // Force navigation to home page
+      window.location.href = window.location.origin;
     } catch (error) {
       toast({
         title: "Failed to Forfeit",
@@ -445,7 +501,7 @@ export default function MatchDashboard() {
               <div className="flex items-center text-sm text-text-secondary">
                 <span className="flex items-center mr-4">
                   <i className="ri-time-line mr-1" />
-                  {formatTime(timeRemaining)} remaining
+                  {formatTime(displayTimeRemaining)} remaining
                 </span>
                 <span className="flex items-center">
                   <i className="ri-coin-line mr-1" />
@@ -456,18 +512,18 @@ export default function MatchDashboard() {
             <div className="flex space-x-3">
               <Button
                 variant="outline"
-                className="bg-bg-primary"
+                className="bg-bg-primary mr-2"
                 onClick={() => setShowSpectators(!showSpectators)}
               >
                 <i className="ri-eye-line mr-1" />
                 Spectators ({activeMatch.spectators.length})
               </Button>
-              <Button
+              <Button 
                 variant="destructive"
                 className="hover:bg-loss"
                 onClick={handleForfeit}
               >
-                <i className="ri-close-line mr-1" />
+                <i className="ri-close-line mr-1"></i>
                 Forfeit
               </Button>
             </div>

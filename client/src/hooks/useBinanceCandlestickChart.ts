@@ -6,6 +6,7 @@ export interface Candle {
   high: number;
   low: number;
   close: number;
+  volume?: number; // Adding volume for the chart
 }
 
 export const useBinanceCandlestickChart = (symbol: string, interval: string) => {
@@ -28,6 +29,7 @@ export const useBinanceCandlestickChart = (symbol: string, interval: string) => 
           high: parseFloat(d[2]),
           low: parseFloat(d[3]),
           close: parseFloat(d[4]),
+          volume: parseFloat(d[5]), // Add volume data from Binance
         };
       });
       setCandles(formatted);
@@ -47,6 +49,7 @@ export const useBinanceCandlestickChart = (symbol: string, interval: string) => 
           high: parseFloat(k.h),
           low: parseFloat(k.l),
           close: parseFloat(k.c),
+          volume: parseFloat(k.v), // Add volume from WebSocket data
         };
 
         console.log("WebSocket Raw Time (ms):", newCandle.time);

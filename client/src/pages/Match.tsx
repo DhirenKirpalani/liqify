@@ -340,12 +340,126 @@ export default function Match() {
   // Effect for handling match end
   useEffect(() => {
     if (matchEnded) {
+      console.log('Match ended detected, redirecting to home...');
       // Redirect to home to show post-match summary
       setLocation("/");
       // Clear stored match data when match ends
       localStorage.removeItem('activeMatchData');
+      // Also reset match state
+      resetMatch();
     }
-  }, [matchEnded, setLocation]);
+  }, [matchEnded, setLocation, resetMatch]);
+  
+  // CRITICAL: Combined WebSocket + Basic polling approach for match forfeit detection
+  // This is more reliable than either approach alone
+  useEffect(() => {
+    if (!activeMatch || !connected || !address) return;
+    
+    console.log('Match monitoring activated for ID:', activeMatch.id);
+    let forceRedirectTriggered = false;
+    
+    // Function to perform redirection (used by both WebSocket and polling)
+    const performMatchEndRedirection = (reason = 'unknown') => {
+      // Prevent duplicate redirects
+      if (forceRedirectTriggered) return;
+      forceRedirectTriggered = true;
+      
+      console.log(`Match end detected (${reason}). Performing cleanup and redirect...`);
+      
+      // Send a notification using the global notification system
+      if (typeof window !== 'undefined' && (window as any).cryptoArenaNotifications) {
+        // Determine notification type based on the reason
+        if (reason.includes('forfeit') || reason.includes('websocket')) {
+          (window as any).cryptoArenaNotifications.addNotification({
+            type: 'match_forfeit',
+            title: 'Match Forfeited',
+            message: 'Your opponent has forfeited the match.',
+            actionUrl: '/'
+          });
+        } else {
+          (window as any).cryptoArenaNotifications.addNotification({
+            type: 'match_end',
+            title: 'Match Ended',
+            message: 'Your match has ended.',
+            actionUrl: '/'
+          });
+        }
+      }
+      
+      // Clean up match data
+      localStorage.removeItem('activeMatchData');
+      resetMatch();
+      
+      // Use direct location change for most reliable redirect
+      window.location.href = '/';
+    };
+    
+    // 1. WEBSOCKET APPROACH (Primary method)
+    // Listen for match_forfeited events from WebSocket
+    const handleWebsocketMessage = (event: MessageEvent) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log('WebSocket message received:', data);
+        
+        // Check if this is a forfeit message for our match
+        if (data.type === 'match_forfeited' && data.matchId === activeMatch.id) {
+          console.log('WebSocket: Match forfeit notification received!');
+          performMatchEndRedirection('websocket');
+        }
+        
+        // Also check for general match end events
+        if (data.type === 'match_ended' && data.matchId === activeMatch.id) {
+          console.log('WebSocket: Match end notification received!');
+          performMatchEndRedirection('websocket');
+        }
+      } catch (e) {
+        console.error('Error parsing WebSocket message:', e);
+      }
+    };
+    
+    // Add WebSocket event listener
+    window.addEventListener('message', handleWebsocketMessage);
+    
+    // 2. MINIMAL POLLING FALLBACK (Backup method)
+    // Only poll every 10 seconds as a last resort
+    const pollMatchStatus = async () => {
+      try {
+        // Only check active match using most likely endpoint
+        const response = await fetch(`/api/matches/active?address=${address}`);
+        if (!response.ok) return;
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) return;
+        
+        const data = await response.json();
+        
+        // If we previously had a match but now there's none, it ended
+        if (!data.match && activeMatch) {
+          console.log('Polling: Active match no longer exists!');
+          performMatchEndRedirection('polling_no_match');
+          return;
+        }
+        
+        // If match exists but status has changed from active
+        if (data.match && data.match.id === activeMatch.id && data.match.status !== 'active') {
+          console.log('Polling: Match status changed to:', data.match.status);
+          performMatchEndRedirection('polling_status_change');
+        }
+      } catch (error) {
+        // Silently ignore errors for polling - it's just a fallback
+      }
+    };
+    
+    // Fallback polling - run less frequently (every 10 seconds)
+    const pollInterval = setInterval(pollMatchStatus, 10000);
+    
+    // Cleanup function
+    return () => {
+      window.removeEventListener('message', handleWebsocketMessage);
+      clearInterval(pollInterval);
+    };
+  }, [activeMatch, connected, address, resetMatch]);
+
   
   // Create a debounced version of activeMatch for localStorage operations
   const debouncedMatch = useDebounce(activeMatch, 2000); // 2 second debounce
