@@ -23,36 +23,6 @@ export default function Home() {
   const marketParam = urlParams.get('market') || 'BTC-PERP';
   const timeframeParam = urlParams.get('timeframe') || '1h';
   
-  // Ensure URL hash is in sync with active section
-  useEffect(() => {
-    const activeSection = localStorage.getItem('activeNavSection');
-    
-    // If leaderboard is active, scroll to the leaderboard section
-    if (activeSection === 'leaderboard') {
-      // We need to delay the scroll to ensure all components are rendered
-      const scrollTimer = setTimeout(() => {
-        const leaderboardSection = document.getElementById('leaderboard-section');
-        if (leaderboardSection) {
-          // Account for fixed header
-          const header = document.querySelector('header');
-          const headerHeight = header ? header.offsetHeight : 0;
-          
-          // Calculate position and adjust for header
-          const sectionTop = leaderboardSection.getBoundingClientRect().top + window.pageYOffset;
-          const scrollToY = sectionTop - headerHeight;
-          
-          // Scroll with adjustment
-          window.scrollTo({
-            top: scrollToY,
-            behavior: 'auto' // Use 'auto' for initial load to prevent double animation
-          });
-        }
-      }, 100);
-      
-      return () => clearTimeout(scrollTimer);
-    }
-  }, []);
-  
   // Sample active games data
   const activeGames = [
     { id: "1", player1: "Alice", player2: "Bob", isActive: true },
@@ -68,9 +38,9 @@ export default function Home() {
   }, [activeMatch, matchEnded]);
 
   return (
-    <div className="min-h-screen text-white" style={{ backgroundColor: "#000C28" }}>
+    <div className="min-h-screen bg-bg-darkest text-white">
       {/* Main Content */}
-      <div className="container mx-auto px-8 py-10 max-w-screen-xl">
+      <div className="container mx-auto px-4 py-6 max-w-screen-xl">
         {/* Wallet Connect Modal */}
         <WalletConnectModal show={showModal} onClose={() => setShowModal(false)} />
 
@@ -79,7 +49,7 @@ export default function Home() {
           <PostMatchSummary />
         ) : (
           // Main Layout
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Left Column - Create Game */}
             <div className="md:col-span-1">
               <CreateGamePanel />
@@ -104,7 +74,7 @@ export default function Home() {
             {/* Middle & Right Columns - Chart and Market Data */}
             <div className="md:col-span-2 space-y-6">
               {/* Trading Chart with Market Selection */}
-              <TradingChart market={marketParam || "BTC-PERP"} />
+              <TradingChart market={marketParam} />
               
               {/* Market Table */}
               <MarketTable />

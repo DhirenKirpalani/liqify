@@ -53,6 +53,30 @@ export default function NavBar() {
     }
   }, [activeSection]);
   
+  // Function to scroll to leaderboard section
+  const scrollToLeaderboard = () => {
+    // Find the leaderboard section by its ID
+    const leaderboardSection = document.getElementById('leaderboard-section');
+    
+    if (leaderboardSection) {
+      // If found, scroll to it with smooth behavior
+      leaderboardSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      // Fallback to a reasonable scroll position if element not found
+      console.log('Leaderboard section not found, using fallback scroll');
+      window.scrollTo({ top: 900, behavior: 'smooth' });
+    }
+  };
+  
+  // Maintain persistence - scroll to leaderboard if it was the active section
+  useEffect(() => {
+    // Only execute on the homepage
+    if (location === '/' && activeSection === 'leaderboard') {
+      // Short delay to ensure DOM is fully loaded
+      setTimeout(scrollToLeaderboard, 500);
+    }
+  }, [location]);
+  
   // Notification state
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [hasUnread, setHasUnread] = useState(false);
@@ -217,18 +241,10 @@ export default function NavBar() {
                 // Set leaderboard as active section
                 setActiveSection('leaderboard');
                 
-                // Use a direct hardcoded approach for more reliability
-                const scrollToLeaderboard = () => {
-                  // Scroll to a position where we're sure the leaderboard will be visible
-                  // This is a simpler approach that should be more reliable than calculating positions
-                  window.scrollTo(0, 900);
-                };
-                
                 // If not on homepage, navigate to home first then scroll
                 if (location !== '/') {
                   setLocation('/');
-                  // Use a timeout to ensure navigation completes
-                  setTimeout(scrollToLeaderboard, 100);
+                  // The scrollToLeaderboard will be triggered by the useEffect when location changes
                 } else {
                   // Already on homepage, scroll immediately
                   scrollToLeaderboard();

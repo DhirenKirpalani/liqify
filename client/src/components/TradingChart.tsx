@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useDrift } from "@/lib/driftAdapter";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { initTradingView } from "@/lib/tradingViewAdapter";
+import { initTradingView, setChartSymbol, setChartInterval, removeTradingViewBranding } from "@/lib/tradingViewAdapter";
 
 interface TradingChartProps {
   market: string;
@@ -20,139 +19,168 @@ const AVAILABLE_MARKETS = [
   { label: "DOGE-PERP", value: "DOGE-PERP" }
 ];
 
-// Available timeframes for selection
-const TIMEFRAMES = [
-  { label: "1m", value: "1" },
-  { label: "5m", value: "5" },
-  { label: "15m", value: "15" },
-  { label: "1h", value: "60" },
-  { label: "4h", value: "240" },
-  { label: "1D", value: "D" }
-];
+// Mapping of market tickers to TradingView symbols
+// Using the most basic symbols that should work with the free widget
+const TRADINGVIEW_SYMBOLS: Record<string, string> = {
+  "BTC-PERP": "BTCUSD",
+  "ETH-PERP": "ETHUSD",
+  "SOL-PERP": "SOLUSD",
+  "AVAX-PERP": "AVAXUSD",
+  "ARB-PERP": "ARBUSD",
+  "BNB-PERP": "BNBUSD",
+  "DOGE-PERP": "DOGEUSD"
+};
 
 export default function TradingChart({ market: initialMarket }: TradingChartProps) {
   // Load saved preferences from localStorage or use defaults
   const getSavedMarket = () => {
-    const saved = localStorage.getItem('cryptoClash_selectedMarket');
-    return saved || initialMarket;
+    try {
+      const saved = localStorage.getItem('cryptoClash_selectedMarket');
+      return saved || initialMarket;
+    } catch (e) {
+      return initialMarket;
+    }
   };
   
   const getSavedTimeframe = () => {
-    const saved = localStorage.getItem('cryptoClash_selectedTimeframe');
-    return saved || "15";
+    try {
+      const saved = localStorage.getItem('cryptoClash_selectedTimeframe');
+      return saved || "15m";
+    } catch (e) {
+      return "15m";
+    }
   };
   
   // Allow changing the market within the component with persistence
   const [selectedMarket, setSelectedMarket] = useState(getSavedMarket());
   const [timeframe, setTimeframe] = useState(getSavedTimeframe());
-  const [currentPrice, setCurrentPrice] = useState<number | null>(null);
-  const [priceChange, setPriceChange] = useState({ value: 0, percentage: 0 });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Reference for chart container and widget
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  const { getMarketPrice } = useDrift();
+  const widgetRef = useRef<any>(null);
   
   // Save preferences when they change
   const handleMarketChange = (value: string) => {
     setSelectedMarket(value);
-    localStorage.setItem('cryptoClash_selectedMarket', value);
+    try {
+      localStorage.setItem('cryptoClash_selectedMarket', value);
+      
+      // Update existing chart if available
+      if (widgetRef.current) {
+        const symbol = TRADINGVIEW_SYMBOLS[value] || TRADINGVIEW_SYMBOLS['BTC-PERP'];
+        setChartSymbol(widgetRef.current, symbol);
+      }
+    } catch (e) {
+      console.error("Failed to save market preference", e);
+    }
   };
   
   const handleTimeframeChange = (value: string) => {
     setTimeframe(value);
-    localStorage.setItem('cryptoClash_selectedTimeframe', value);
+    try {
+      localStorage.setItem('cryptoClash_selectedTimeframe', value);
+      
+      // Update existing chart if available
+      if (widgetRef.current) {
+        setChartInterval(widgetRef.current, value);
+      }
+    } catch (e) {
+      console.error("Failed to save timeframe preference", e);
+    }
   };
-  
-  // Format price with proper decimal places
-  const formatPrice = (price: number) => {
-    return price.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  };
-  
-  // Initialize TradingView chart
+
+  // Initialize and manage TradingView chart when selected market or timeframe changes
   useEffect(() => {
-    if (!chartContainerRef.current) return;
-    
-    // Generate a unique ID for the container if it doesn't have one
-    if (!chartContainerRef.current.id) {
-      chartContainerRef.current.id = `tv_chart_${Math.random().toString(36).substring(2, 9)}`;
+    // Clean up any previous instances
+    if (chartContainerRef.current) {
+      chartContainerRef.current.innerHTML = '';
     }
     
-    // Convert market format to TradingView format (e.g., "BTC-PERP" -> "BINANCE:BTCUSDT")
-    const symbol = `BINANCE:${selectedMarket.replace('-PERP', '')}USDT`;
+    // Remove any lingering TradingView styles
+    const existingStyle = document.getElementById('tv-branding-blocker');
+    if (existingStyle) {
+      existingStyle.remove();
+    }
     
-    // Initialize the TradingView chart
-    initTradingView(chartContainerRef.current, symbol, timeframe)
-      .catch(error => console.error("Failed to initialize TradingView chart:", error));
+    const initChart = async () => {
+      if (!chartContainerRef.current) return;
       
-    // Fetch current price data
-    const fetchPriceData = async () => {
       try {
-        const price = await getMarketPrice(selectedMarket);
-        setCurrentPrice(price);
+        setIsLoading(true);
+        setError(null);
         
-        // Mock price change data (in a real app, this would come from the API)
-        const changeValue = price * (Math.random() * 0.06 - 0.03); // Random -3% to +3%
-        const changePercentage = (changeValue / price) * 100;
-        setPriceChange({
-          value: changeValue,
-          percentage: changePercentage
-        });
-      } catch (error) {
-        console.error("Failed to fetch price data:", error);
+        // Create a unique ID for the container if it doesn't have one
+        if (!chartContainerRef.current.id) {
+          chartContainerRef.current.id = 'tv_chart_container';
+        }
+        
+        // Get the appropriate symbol for the selected market
+        const symbol = TRADINGVIEW_SYMBOLS[selectedMarket] || TRADINGVIEW_SYMBOLS['BTC-PERP'];
+        
+        // Initialize TradingView chart
+        widgetRef.current = await initTradingView(chartContainerRef.current, symbol, timeframe);
+        
+        setIsLoading(false);
+      } catch (err: any) {
+        console.error("Failed to initialize TradingView chart:", err);
+        setError("Failed to load chart. Please refresh the page.");
+        setIsLoading(false);
       }
     };
     
-    fetchPriceData();
-    const intervalId = setInterval(fetchPriceData, 30000); // Update every 30 seconds
+    // Short delay to ensure DOM is ready
+    setTimeout(initChart, 100);
     
+    // Cleanup function
     return () => {
-      clearInterval(intervalId);
+      // Clean up the widget if needed
+      if (widgetRef.current && widgetRef.current.remove) {
+        try {
+          widgetRef.current.remove();
+        } catch (e) {
+          console.error("Failed to remove TradingView widget", e);
+        }
+      }
     };
-  }, [selectedMarket, timeframe, getMarketPrice]);
-  
-  const isPriceUp = priceChange.percentage >= 0;
-  
+  }, [selectedMarket, timeframe]); // Re-run when market or timeframe changes
+
+  const timeframes = [
+    { label: "1m", value: "1m" },
+    { label: "5m", value: "5m" },
+    { label: "15m", value: "15m" },
+    { label: "30m", value: "30m" },
+    { label: "1h", value: "1h" },
+    { label: "4h", value: "4h" },
+    { label: "1D", value: "1D" },
+  ];
+
   return (
     <Card className="gradient-card rounded-xl p-4 border border-neutral/20 mb-6">
       <CardContent className="p-0">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
-          {/* Market selector and price info */}
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 w-full md:w-auto">
-            <Select
-              value={selectedMarket}
-              onValueChange={handleMarketChange}
-            >
-              <SelectTrigger className="bg-bg-primary border-neutral/20 w-40 h-9 text-sm">
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center space-x-3">
+            <Select value={selectedMarket} onValueChange={handleMarketChange}>
+              <SelectTrigger className="w-[120px] bg-bg-primary">
                 <SelectValue placeholder="Select market" />
               </SelectTrigger>
-              <SelectContent className="bg-bg-darker border-neutral/20">
+              <SelectContent>
                 {AVAILABLE_MARKETS.map((market) => (
-                  <SelectItem key={market.value} value={market.value} className="text-sm hover:bg-bg-primary">
+                  <SelectItem key={market.value} value={market.value}>
                     {market.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            
-            {currentPrice && (
-              <span className="font-mono font-medium">
-                {formatPrice(currentPrice)}
-                <span className={`ml-2 text-sm ${isPriceUp ? 'text-profit' : 'text-loss'}`}>
-                  {isPriceUp ? '+' : ''}{priceChange.percentage.toFixed(2)}%
-                </span>
-              </span>
-            )}
           </div>
-          
-          {/* Timeframe selector */}
-          <div className="flex flex-wrap gap-1">
-            {TIMEFRAMES.map((tf) => (
+          <div className="flex space-x-2">
+            {timeframes.map((tf) => (
               <Button
                 key={tf.value}
                 size="sm"
                 variant="ghost"
-                className={`text-xs h-9 px-3 ${timeframe === tf.value ? "bg-accent-primary/20 text-accent-primary" : "bg-bg-primary"}`}
+                className={`text-xs ${timeframe === tf.value ? "bg-accent-primary/20 text-accent-primary" : "bg-bg-primary"}`}
                 onClick={() => handleTimeframeChange(tf.value)}
               >
                 {tf.label}
@@ -161,12 +189,38 @@ export default function TradingChart({ market: initialMarket }: TradingChartProp
           </div>
         </div>
         
-        {/* Chart Container */}
-        <div 
-          ref={chartContainerRef} 
-          className="h-[400px] w-full rounded-lg overflow-hidden bg-bg-primary/50"
-        />
+        {/* TradingView Chart Container */}
+        <div className="h-[400px] rounded-lg overflow-hidden bg-bg-primary/50 relative">
+          {isLoading && !error ? (
+            <div className="chart-placeholder absolute inset-0 flex items-center justify-center z-10 bg-bg-darker/80">
+              <div className="text-center">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-2 mx-auto"></div>
+                <p className="text-text-secondary text-sm">Loading chart...</p>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="chart-placeholder absolute inset-0 flex items-center justify-center z-10 bg-bg-darker/80">
+              <div className="text-center">
+                <i className="ri-error-warning-line text-4xl text-loss mb-2"></i>
+                <p className="text-text-secondary text-sm">{error}</p>
+              </div>
+            </div>
+          ) : null}
+          
+          {/* This div will contain the TradingView widget */}
+          <div
+            ref={chartContainerRef}
+            id="tv_chart_container"
+            className="w-full h-full"
+            style={{
+              visibility: isLoading ? 'hidden' : 'visible',
+              height: '100%',
+              width: '100%'
+            }}
+          />
+        </div>
       </CardContent>
     </Card>
   );
 }
+

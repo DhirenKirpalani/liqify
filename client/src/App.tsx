@@ -21,7 +21,7 @@ import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
-    <div className="flex flex-col h-screen bg-bg-primary text-text-primary overflow-hidden">
+    <div className="flex flex-col h-screen text-text-primary overflow-hidden" style={{ backgroundColor: "#000C28" }}>
       <NavBar />
       <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">
         <Switch>
