@@ -1,39 +1,131 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { collection, query, where, orderBy, limit, onSnapshot } from "firebase/firestore";
+import { db } from "@/firebase";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Link } from "wouter";
 
-type LeaderboardUser = {
-  id: number;
+type LeaderboardEntry = {
+  uid: string;
   username: string;
-  rank: number;
-  winRate: number;
-  totalPnl: number;
-  arenaTokens: number;
+  wins: number;
+  losses: number;
+  winPercentage: number;
 };
 
-// Sample data to use when no API data is available
-const sampleLeaderboardData: LeaderboardUser[] = [
-  { id: 1, username: "CryptoKing", rank: 1, winRate: 75.5, totalPnl: 248.32, arenaTokens: 12450 },
-  { id: 2, username: "TradeMaster", rank: 2, winRate: 68.2, totalPnl: 187.49, arenaTokens: 9820 },
-  { id: 3, username: "DiamondHands", rank: 3, winRate: 67.8, totalPnl: 156.21, arenaTokens: 8750 },
-  { id: 4, username: "SatoshiJr", rank: 4, winRate: 65.3, totalPnl: 142.84, arenaTokens: 7630 },
-  { id: 5, username: "CoinCollector", rank: 5, winRate: 63.1, totalPnl: -42.11, arenaTokens: 6540 },
+type Season = {
+  id: string;
+  name: string;
+  startDate: Date;
+  endDate: Date;
+  active: boolean;
+};
+
+// Sample data to use when no Firestore data is available
+const sampleLeaderboardData: LeaderboardEntry[] = [
+  { uid: "1", username: "CryptoKing", wins: 42, losses: 12, winPercentage: 77.8 },
+  { uid: "2", username: "TradeMaster", wins: 36, losses: 15, winPercentage: 70.6 },
+  { uid: "3", username: "DiamondHands", wins: 32, losses: 14, winPercentage: 69.6 },
+  { uid: "4", username: "SatoshiJr", wins: 28, losses: 15, winPercentage: 65.1 },
+  { uid: "5", username: "CoinCollector", wins: 26, losses: 16, winPercentage: 61.9 },
 ];
 
 export default function LeaderboardPreview() {
-  // Use the same query as the main leaderboard
-  const { data, isLoading } = useQuery<LeaderboardUser[]>({
-    queryKey: ['/api/leaderboard'],
-  });
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
+  const [activeSeason, setActiveSeason] = useState<Season | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Fetch active season
+  useEffect(() => {
+    const seasonsRef = collection(db, "seasons");
+    const q = query(seasonsRef, where("active", "==", true));
+    
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      if (!querySnapshot.empty) {
+        const seasonDoc = querySnapshot.docs[0];
+        const seasonData = seasonDoc.data() as Omit<Season, "id">;
+        
+        setActiveSeason({
+          ...seasonData,
+          id: seasonDoc.id,
+        });
+      } else {
+        // If no active season is found, use the current year to determine which season we're in
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth();
+        const isFirstHalf = currentMonth < 6;
+        
+        setActiveSeason({
+          id: "current",
+          name: `Season ${isFirstHalf ? 1 : 2} (${isFirstHalf ? 'Jan-Jun' : 'Jul-Dec'} ${currentYear})`,
+          startDate: new Date(currentYear, isFirstHalf ? 0 : 6, 1),
+          endDate: new Date(currentYear, isFirstHalf ? 5 : 11, isFirstHalf ? 30 : 31),
+          active: true
+        });
+      }
+    });
+    
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch leaderboard data for active season
+  useEffect(() => {
+    if (!activeSeason) return;
+    
+    setIsLoading(true);
+    
+    const leaderboardRef = collection(db, "seasonalLeaderboard");
+    const q = query(
+      leaderboardRef,
+      where("seasonId", "==", activeSeason.id),
+      orderBy("wins", "desc"),
+      limit(5)
+    );
+    
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      if (querySnapshot.empty) {
+        // If no data in Firestore yet, use sample data
+        setLeaderboardData(sampleLeaderboardData);
+      } else {
+        const entries: LeaderboardEntry[] = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const totalGames = data.wins + data.losses;
+          const winPercentage = totalGames > 0 ? (data.wins / totalGames) * 100 : 0;
+          
+          entries.push({
+            uid: doc.id,
+            username: data.username,
+            wins: data.wins,
+            losses: data.losses,
+            winPercentage
+          });
+        });
+        
+        setLeaderboardData(entries);
+      }
+      
+      setIsLoading(false);
+    });
+    
+    return () => unsubscribe();
+  }, [activeSeason]);
   
-  // If API data is available, use it. Otherwise, use sample data
-  const displayData = data?.length ? data.slice(0, 5) : sampleLeaderboardData;
+  // Display data is either from Firestore or sample data
+  const displayData = leaderboardData;
 
   return (
     <div className="mt-10" id="leaderboard-section">
       <div className="p-4 bg-bg-darker rounded-xl border border-neutral/10">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-white">LEADERBOARD</h2>
+          <h2 className="text-xl font-bold text-white">
+            {activeSeason ? `LEADERBOARD - ${activeSeason.name}` : 'LEADERBOARD'}
+          </h2>
+          <Link href="/leaderboard">
+            <a className="text-xs text-blue-400 hover:text-blue-300 transition-colors">
+              View Full Leaderboard →
+            </a>
+          </Link>
         </div>
         
         <div className="overflow-hidden rounded-md">
@@ -42,8 +134,8 @@ export default function LeaderboardPreview() {
               <TableRow className="border-b border-neutral/10">
                 <TableHead className="w-[50px] py-2 text-xs text-neutral-400">Rank</TableHead>
                 <TableHead className="py-2 text-xs text-neutral-400">Trader</TableHead>
+                <TableHead className="text-right py-2 text-xs text-neutral-400">Wins</TableHead>
                 <TableHead className="text-right py-2 text-xs text-neutral-400">Win Rate</TableHead>
-                <TableHead className="text-right py-2 text-xs text-neutral-400">PnL</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -57,14 +149,12 @@ export default function LeaderboardPreview() {
                   </TableRow>
                 ))
               ) : (
-                displayData.map((user) => (
-                  <TableRow key={user.id} className="border-b border-neutral/10 last:border-none">
-                    <TableCell className="py-3 font-medium text-white">{user.rank}</TableCell>
+                displayData.map((user, index) => (
+                  <TableRow key={user.uid} className="border-b border-neutral/10 last:border-none">
+                    <TableCell className="py-3 font-medium text-white">{index + 1}</TableCell>
                     <TableCell className="py-3 font-medium text-white">{user.username}</TableCell>
-                    <TableCell className="text-right py-3 text-white">{user.winRate}%</TableCell>
-                    <TableCell className={`text-right py-3 ${user.totalPnl >= 0 ? 'text-green-500' : 'text-red-500'} font-medium`}>
-                      {user.totalPnl >= 0 ? '+' : ''}{user.totalPnl.toFixed(1)}%
-                    </TableCell>
+                    <TableCell className="text-right py-3 text-green-500 font-medium">{user.wins}</TableCell>
+                    <TableCell className="text-right py-3 text-white">{user.winPercentage.toFixed(1)}%</TableCell>
                   </TableRow>
                 ))
               )}
