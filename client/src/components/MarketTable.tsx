@@ -18,9 +18,11 @@ export default function MarketTable() {
   };
 
   return (
-    <div className="p-4 bg-bg-darker rounded-xl border border-neutral/10">
+    <div className="p-4 rounded-xl border border-[#333333] bg-[#1A1A1A] shadow-lg overflow-hidden relative">
+        {/* Animated top border effect */}
+        <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-[#00F0FF]/0 via-[#00F0FF]/50 to-[#00F0FF]/0 animate-pulse"></div>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-white">MARKETS</h2>
+        <h2 className="text-xl font-bold text-[#F2F2F2] relative inline-block data-highlight">MARKETS</h2>
       </div>
       
       <div className="mb-4">
@@ -36,7 +38,7 @@ export default function MarketTable() {
             {marketData.map((market) => (
               <tr 
                 key={market.symbol} 
-                className="border-b border-neutral/10 last:border-none hover:bg-white/5 cursor-pointer transition-colors"
+                className="border-b border-[#333333]/30 last:border-none hover:bg-[#00F0FF]/5 cursor-pointer transition-all duration-300 interactive-element"
                 onClick={() => {
                   // Navigate to home with the selected market
                   setLocation(`/?market=${market.symbol}&timeframe=1h`);
@@ -49,7 +51,7 @@ export default function MarketTable() {
                   </div>
                 </td>
                 <td className="py-3 text-right">
-                  <span className="font-medium text-white">${formatPrice(market)}</span>
+                  <span className="font-medium text-[#00F0FF] font-mono">${formatPrice(market)}</span>
                 </td>
                 <td className="py-3 text-right">
                   <span className={`font-medium ${market.percentChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>

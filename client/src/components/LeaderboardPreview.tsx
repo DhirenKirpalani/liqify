@@ -116,14 +116,20 @@ export default function LeaderboardPreview() {
 
   return (
     <div className="mt-10" id="leaderboard-section">
-      <div className="p-4 bg-bg-darker rounded-xl border border-neutral/10">
+      <div className="p-4 rounded-xl border border-[#333333] bg-[#1A1A1A] shadow-lg overflow-hidden relative">
+      {/* Animated corner effect - opposite of the TradingChart */}
+      <div className="absolute top-0 right-0 w-16 h-16">
+        <div className="absolute top-0 right-0 w-[1px] h-8 bg-[#C800FF] animate-pulse"></div>
+        <div className="absolute top-0 right-0 w-8 h-[1px] bg-[#C800FF] animate-pulse"></div>
+      </div>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-white">
+          <h2 className="text-xl font-bold text-[#F2F2F2] relative inline-block data-highlight">
             {activeSeason ? `LEADERBOARD - ${activeSeason.name}` : 'LEADERBOARD'}
           </h2>
           <Link href="/leaderboard">
-            <a className="text-xs text-blue-400 hover:text-blue-300 transition-colors">
-              View Full Leaderboard →
+            <a className="text-xs text-[#00F0FF] hover:text-[#00F0FF]/80 transition-all duration-300 relative inline-block group">
+              <span className="relative z-10">VIEW FULL LEADERBOARD</span>
+              <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-[#00F0FF] group-hover:w-full transition-all duration-300"></span>
             </a>
           </Link>
         </div>
@@ -150,10 +156,10 @@ export default function LeaderboardPreview() {
                 ))
               ) : (
                 displayData.map((user, index) => (
-                  <TableRow key={user.uid} className="border-b border-neutral/10 last:border-none">
+                  <TableRow key={user.uid} className="border-b border-[#333333]/30 last:border-none hover:bg-[#C800FF]/5 transition-all duration-300 interactive-element">
                     <TableCell className="py-3 font-medium text-white">{index + 1}</TableCell>
-                    <TableCell className="py-3 font-medium text-white">{user.username}</TableCell>
-                    <TableCell className="text-right py-3 text-green-500 font-medium">{user.wins}</TableCell>
+                    <TableCell className="py-3 text-[#F2F2F2] font-medium">{user.username}</TableCell>
+                    <TableCell className="text-right py-3 text-[#00FF94] font-mono data-highlight">{user.wins}</TableCell>
                     <TableCell className="text-right py-3 text-white">{user.winPercentage.toFixed(1)}%</TableCell>
                   </TableRow>
                 ))

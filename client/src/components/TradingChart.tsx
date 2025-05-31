@@ -146,7 +146,16 @@ export default function TradingChart({ market: initialMarket }: TradingChartProp
     };
   }, [selectedMarket, timeframe]); // Re-run when market or timeframe changes
 
-  const timeframes = [
+  // Common timeframes to always show
+  const commonTimeframes = [
+    { label: "1m", value: "1m" },
+    { label: "5m", value: "5m" },
+    { label: "15m", value: "15m" },
+    { label: "30m", value: "30m" },
+  ];
+  
+  // All available timeframes
+  const allTimeframes = [
     { label: "1m", value: "1m" },
     { label: "5m", value: "5m" },
     { label: "15m", value: "15m" },
@@ -155,9 +164,29 @@ export default function TradingChart({ market: initialMarket }: TradingChartProp
     { label: "4h", value: "4h" },
     { label: "1D", value: "1D" },
   ];
+  
+  // Determine which timeframes to show in dropdown (all except common ones)
+  const dropdownTimeframes = allTimeframes.filter(tf => 
+    !commonTimeframes.some(common => common.value === tf.value)
+  );
+  
+  // Check if the current timeframe is one from the dropdown list
+  const isDropdownTimeframe = !commonTimeframes.some(tf => tf.value === timeframe) && 
+    dropdownTimeframes.some(tf => tf.value === timeframe);
+  
+  // Get the label for the selected dropdown timeframe
+  const selectedDropdownTimeframe = dropdownTimeframes.find(tf => tf.value === timeframe);
 
   return (
-    <Card className="gradient-card rounded-xl p-4 border border-neutral/20 mb-6">
+    <Card className="gradient-card rounded-xl p-4 border border-[#333333] mb-6 relative overflow-hidden">  
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold text-[#F2F2F2] relative inline-block data-highlight">TRADING CHART</h2>
+      </div>
+      {/* Animated corner effect */}
+      <div className="absolute top-0 left-0 w-16 h-16">
+        <div className="absolute top-0 left-0 w-[1px] h-8 bg-[#00F0FF] animate-pulse"></div>
+        <div className="absolute top-0 left-0 w-8 h-[1px] bg-[#00F0FF] animate-pulse"></div>
+      </div>
       <CardContent className="p-0">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center space-x-3">
@@ -175,7 +204,8 @@ export default function TradingChart({ market: initialMarket }: TradingChartProp
             </Select>
           </div>
           <div className="flex space-x-2">
-            {timeframes.map((tf) => (
+            {/* Show common timeframes as buttons */}
+            {commonTimeframes.map((tf) => (
               <Button
                 key={tf.value}
                 size="sm"
@@ -186,6 +216,20 @@ export default function TradingChart({ market: initialMarket }: TradingChartProp
                 {tf.label}
               </Button>
             ))}
+            
+            {/* More dropdown for additional timeframes */}
+            <Select value={timeframe} onValueChange={handleTimeframeChange}>
+              <SelectTrigger className={`w-[80px] h-8 text-xs ${isDropdownTimeframe ? "bg-accent-primary/20 text-accent-primary" : "bg-bg-primary"}`}>
+                <span>{isDropdownTimeframe && selectedDropdownTimeframe ? selectedDropdownTimeframe.label : "More"}</span>
+              </SelectTrigger>
+              <SelectContent>
+                {dropdownTimeframes.map((tf) => (
+                  <SelectItem key={tf.value} value={tf.value}>
+                    {tf.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
         

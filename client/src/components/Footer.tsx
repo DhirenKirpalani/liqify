@@ -1,0 +1,181 @@
+import React from 'react';
+import { Link } from "wouter";
+import { Separator } from "@/components/ui/separator";
+import Logo from "./Logo";
+import { Button } from '@/components/ui/button';
+
+export default function Footer() {
+  const currentYear = new Date().getFullYear();
+
+  return (
+    <footer className="bg-[#0E0E10] border-t border-[#00F0FF]/20 py-4 mt-auto relative z-10 mb-0" style={{ height: 'auto', minHeight: '120px' }}>
+      <div className="container max-w-screen-xl mx-auto px-6 md:px-8">
+        {/* Desktop Footer */}
+        <div className="hidden md:grid grid-cols-4 gap-4">
+          {/* Logo and Description */}
+          <div className="col-span-1">
+            <Link href="/">
+              <div className="flex items-center gap-2 mb-2 cursor-pointer">
+                <Logo size={24} />
+                <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#00F0FF] to-[#90D8E4]">LIQIFY</h2>
+              </div>
+            </Link>
+            <p className="text-text-secondary text-sm">
+              The first decentralized peer-to-peer perpetual futures trading platform.
+            </p>
+            <div className="flex mt-3 space-x-4">
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-text-secondary hover:text-[#00F0FF] transition-colors">
+                <i className="ri-twitter-x-line text-xl"></i>
+              </a>
+              <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="text-text-secondary hover:text-[#00F0FF] transition-colors">
+                <i className="ri-discord-line text-xl"></i>
+              </a>
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-text-secondary hover:text-[#00F0FF] transition-colors">
+                <i className="ri-github-line text-xl"></i>
+              </a>
+            </div>
+          </div>
+
+          {/* Products */}
+          <div className="col-span-1">
+            <h3 className="text-white font-medium mb-2">Products</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link href="/games">
+                  <span className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm cursor-pointer">
+                    Games
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/watch">
+                  <span className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm cursor-pointer">
+                    Watch
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/leaderboard">
+                  <span className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm cursor-pointer">
+                    Leaderboard
+                  </span>
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Resources */}
+          <div className="col-span-1">
+            <h3 className="text-white font-medium mb-2">Resources</h3>
+            <ul className="space-y-2">
+              <li>
+                <a href="#" className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm">
+                  Documentation
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm">
+                  API
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm">
+                  FAQ
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Company */}
+          <div className="col-span-1">
+            <h3 className="text-white font-medium mb-2">Company</h3>
+            <ul className="space-y-2">
+              <li>
+                <a href="#" className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm">
+                  About
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm">
+                  Terms of Service
+                </a>
+              </li>
+              <li>
+                <a href="#" className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm">
+                  Privacy Policy
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Mobile Footer - Accordion style */}
+        <div className="md:hidden space-y-3">
+          {/* Logo and Description */}
+          <div>
+            <Link href="/">
+              <div className="flex items-center gap-2 mb-2 cursor-pointer">
+                <Logo size={24} />
+                <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#00F0FF] to-[#90D8E4]">LIQIFY</h2>
+              </div>
+            </Link>
+            <p className="text-text-secondary text-sm">
+              The first decentralized peer-to-peer perpetual futures trading platform.
+            </p>
+            <div className="flex mt-4 space-x-4">
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-text-secondary hover:text-[#00F0FF] transition-colors">
+                <i className="ri-twitter-x-line text-xl"></i>
+              </a>
+              <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="text-text-secondary hover:text-[#00F0FF] transition-colors">
+                <i className="ri-discord-line text-xl"></i>
+              </a>
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-text-secondary hover:text-[#00F0FF] transition-colors">
+                <i className="ri-github-line text-xl"></i>
+              </a>
+            </div>
+          </div>
+
+          {/* Simple links in mobile */}
+          <div className="grid grid-cols-2 gap-y-2 gap-x-2 mt-3">
+            <Link href="/games">
+              <span className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm cursor-pointer">
+                Games
+              </span>
+            </Link>
+            <Link href="/watch">
+              <span className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm cursor-pointer">
+                Watch
+              </span>
+            </Link>
+            <Link href="/leaderboard">
+              <span className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm cursor-pointer">
+                Leaderboard
+              </span>
+            </Link>
+            <a href="#" className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm">
+              Documentation
+            </a>
+            <a href="#" className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm">
+              About
+            </a>
+            <a href="#" className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm">
+              Terms
+            </a>
+          </div>
+        </div>
+
+        {/* Copyright - Both Mobile and Desktop */}
+        <div className="border-t border-[#00F0FF]/10 mt-4 pt-3 flex flex-col md:flex-row justify-between items-center">
+          <p className="text-text-secondary text-xs md:text-sm">
+            © {currentYear} LIQIFY. All rights reserved.
+          </p>
+          <div className="mt-2 md:mt-0">
+            <Button variant="ghost" size="sm" className="text-text-secondary hover:text-[#00F0FF] text-xs md:text-sm">
+              Contact Support
+            </Button>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
