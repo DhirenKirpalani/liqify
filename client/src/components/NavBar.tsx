@@ -258,28 +258,34 @@ export default function NavBar() {
           {/* Function to scroll to top of the page */}
           {(() => {
             const scrollToTop = () => {
-  // Scroll to top with smooth behavior
-  window.scrollTo({
-    top: 0,
-    left: 0,
-    behavior: 'smooth'
-  });
-  
-  // Additional backup methods for older browsers that don't support smooth scrolling
-  // These won't be smooth but serve as fallbacks
-  setTimeout(() => {
-    if (window.pageYOffset > 0) {
-      document.body.scrollTop = 0; // For Safari
-      document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
-      
-      // Also scroll the main element if it exists
-      const mainElement = document.querySelector('main');
-      if (mainElement && mainElement.scrollTop > 0) {
-        mainElement.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }
-  }, 100);
-};
+              // First, scroll the main content area if it exists
+              const mainElement = document.querySelector('main');
+              if (mainElement) {
+                mainElement.scrollTop = 0; // Force immediate scroll to top
+                mainElement.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+              
+              // Then scroll the window with smooth behavior
+              window.scrollTo({
+                top: 0,
+                left: 0,
+                behavior: 'smooth'
+              });
+              
+              // Additional immediate scrolling for all possible elements
+              document.body.scrollTop = 0; // For Safari
+              document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+              
+              // Force a second scroll after a small delay to ensure it reaches the top
+              setTimeout(() => {
+                if (window.pageYOffset > 0 || document.documentElement.scrollTop > 0 || document.body.scrollTop > 0) {
+                  window.scrollTo(0, 0);
+                  document.body.scrollTop = 0;
+                  document.documentElement.scrollTop = 0;
+                  if (mainElement) mainElement.scrollTop = 0;
+                }
+              }, 50);
+            };
             
             // Make scrollToTop available globally for other components
             (window as any).scrollToTop = scrollToTop;
@@ -445,6 +451,15 @@ export default function NavBar() {
                           <i className="ri-wallet-3-line text-xl mr-3"></i>
                           <span className="font-medium">Wallet</span>
                         </div>
+                        <Link href="/about" onClick={() => {
+                          setActiveSection(null);
+                          setMobileMenuOpen(false);
+                        }}>
+                          <div className={`flex items-center p-2 rounded-md ${location === '/about' ? 'bg-[#00F0FF]/10 text-white' : 'text-text-secondary'}`}>
+                            <i className="ri-information-line text-xl mr-3"></i>
+                            <span className="font-medium">About</span>
+                          </div>
+                        </Link>
                       </nav>
                     </ScrollArea>
                     <div className="p-4 border-t border-[#00F0FF]/20">
@@ -521,6 +536,11 @@ export default function NavBar() {
             <Link href="/watch" onClick={() => setActiveSection(null)}>
               <span className={`text-base font-medium hover:text-white transition-colors ${location === '/watch' ? 'text-white' : 'text-text-secondary'}`}>
                 Watch
+              </span>
+            </Link>
+            <Link href="/about" onClick={() => setActiveSection(null)}>
+              <span className={`text-base font-medium hover:text-white transition-colors ${location === '/about' ? 'text-white' : 'text-text-secondary'}`}>
+                About
               </span>
             </Link>
           </nav>

@@ -8,10 +8,10 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-[#0E0E10] border-t border-[#00F0FF]/20 py-4 mt-auto relative z-10 mb-0" style={{ height: 'auto', minHeight: '120px' }}>
-      <div className="container max-w-screen-xl mx-auto px-6 md:px-8">
+    <footer className="bg-[#0E0E10] border-t border-[#00F0FF]/20 py-4 w-full relative z-[10] overflow-x-hidden" style={{ height: 'auto', minHeight: '80px', marginTop: 'auto', flexShrink: 0 }}>
+      <div className="container max-w-full md:max-w-screen-xl mx-auto px-4 md:px-8 overflow-x-hidden">
         {/* Desktop Footer */}
-        <div className="hidden md:grid grid-cols-4 gap-4">
+        <div className="hidden md:grid grid-cols-4 gap-4 w-full overflow-hidden">
           {/* Logo and Description */}
           <div className="col-span-1">
             <Link href="/">
@@ -91,35 +91,34 @@ export default function Footer() {
             <h3 className="text-white font-medium mb-2">Company</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm">
-                  About
-                </a>
+                <Link href="/about">
+                  <span className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm cursor-pointer">
+                    About
+                  </span>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm">
-                  Terms of Service
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm">
-                  Privacy Policy
-                </a>
+                <Link href="/legal">
+                  <span className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm cursor-pointer">
+                    Legal
+                  </span>
+                </Link>
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Mobile Footer - Accordion style */}
-        <div className="md:hidden space-y-3">
+        {/* Mobile Footer - Responsive design with no horizontal scroll */}
+        <div className="md:hidden space-y-3 w-full overflow-x-hidden">
           {/* Logo and Description */}
-          <div>
+          <div className="w-full">
             <Link href="/">
               <div className="flex items-center gap-2 mb-2 cursor-pointer">
                 <Logo size={24} />
                 <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#00F0FF] to-[#90D8E4]">LIQIFY</h2>
               </div>
             </Link>
-            <p className="text-text-secondary text-sm">
+            <p className="text-text-secondary text-sm break-words pr-2">
               The first decentralized peer-to-peer perpetual futures trading platform.
             </p>
             <div className="flex mt-4 space-x-4">
@@ -135,42 +134,46 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Simple links in mobile */}
-          <div className="grid grid-cols-2 gap-y-2 gap-x-2 mt-3">
-            <Link href="/games">
+          {/* Simple links in mobile - with flex-wrap to prevent overflow */}
+          <div className="grid grid-cols-2 gap-y-2 gap-x-2 mt-3 w-full">
+            <Link href="/games" className="truncate">
               <span className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm cursor-pointer">
                 Games
               </span>
             </Link>
-            <Link href="/watch">
+            <Link href="/watch" className="truncate">
               <span className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm cursor-pointer">
                 Watch
               </span>
             </Link>
-            <Link href="/leaderboard">
+            <Link href="/leaderboard" className="truncate">
               <span className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm cursor-pointer">
                 Leaderboard
               </span>
             </Link>
-            <a href="#" className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm">
+            <a href="#" className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm truncate">
               Documentation
             </a>
-            <a href="#" className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm">
-              About
-            </a>
-            <a href="#" className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm">
-              Terms
-            </a>
+            <Link href="/about" className="truncate">
+              <span className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm cursor-pointer">
+                About
+              </span>
+            </Link>
+            <Link href="/legal" className="truncate">
+              <span className="text-text-secondary hover:text-[#00F0FF] transition-colors text-sm cursor-pointer">
+                Legal
+              </span>
+            </Link>
           </div>
         </div>
 
         {/* Copyright - Both Mobile and Desktop */}
-        <div className="border-t border-[#00F0FF]/10 mt-4 pt-3 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-text-secondary text-xs md:text-sm">
+        <div className="border-t border-[#00F0FF]/10 mt-4 pt-3 flex flex-col md:flex-row justify-between items-center w-full overflow-hidden">
+          <p className="text-text-secondary text-xs md:text-sm truncate text-center md:text-left">
             © {currentYear} LIQIFY. All rights reserved.
           </p>
-          <div className="mt-2 md:mt-0">
-            <Button variant="ghost" size="sm" className="text-text-secondary hover:text-[#00F0FF] text-xs md:text-sm">
+          <div className="mt-2 md:mt-0 w-full md:w-auto text-center md:text-right">
+            <Button variant="ghost" size="sm" className="text-text-secondary hover:text-[#00F0FF] text-xs md:text-sm max-w-full">
               Contact Support
             </Button>
           </div>

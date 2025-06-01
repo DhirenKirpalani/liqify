@@ -19,13 +19,15 @@ import Wallet from "@/pages/Wallet";
 import Admin from "@/pages/Admin";
 import CandlestickChartPage from "@/pages/CandlestickChart";
 import NotFound from "@/pages/not-found";
+import About from "@/pages/About";
+import Legal from "@/pages/Legal";
 
 function Router(): JSX.Element {
   useEffect(() => {
-    // Create styles for the hexgrid and particles
+    // Create styles for background and particles
     const style = document.createElement('style');
     style.textContent = `
-      #hex-grid {
+      #background-container {
         position: fixed;
         top: 0;
         left: 0;
@@ -37,16 +39,7 @@ function Router(): JSX.Element {
         background-color: #0E0E10;
       }
       
-      .hexagon {
-        position: absolute;
-        width: 50px;
-        height: 50px;
-        background-color: rgba(14, 14, 16, 0.8);
-        clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-        transition: all 0.3s ease;
-        opacity: 0.15;
-        animation: pulse 6s infinite;
-      }
+      /* Removed hexagon styles */
       
       .no-animation {
         animation: none !important;
@@ -80,40 +73,7 @@ function Router(): JSX.Element {
         100% { transform: scale(1); opacity: 0.15; }
       }
       
-      .circuit-line {
-        position: absolute;
-        height: 2px;
-        background: linear-gradient(to right, transparent, #00F0FF, transparent);
-        box-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
-        animation: circuit-glow 3s infinite;
-        opacity: 0.6;
-        pointer-events: none;
-      }
-      
-      @keyframes circuit-glow {
-        0% { opacity: 0.2; }
-        50% { opacity: 0.8; }
-        100% { opacity: 0.2; }
-      }
-      
-      /* Power dots at intersections */
-      .circuit-line::before, .circuit-line::after {
-        content: '';
-        position: absolute;
-        width: 5px;
-        height: 5px;
-        border-radius: 50%;
-        background-color: inherit;
-        box-shadow: inherit;
-      }
-      
-      .circuit-line::before {
-        left: 0;
-      }
-      
-      .circuit-line::after {
-        right: 0;
-      }
+      /* Removed circuit line styles */
       
       /* Cursor particle effects */
       .cursor-particle {
@@ -131,120 +91,30 @@ function Router(): JSX.Element {
     `;
     document.head.appendChild(style);
 
-    // Create our grid container and hexagon grid elements with performance optimizations
+    // Create a simple background container without hexagons or circuit lines
     function initGameBackground() {
-      const hexGridContainer = document.createElement('div');
-      hexGridContainer.id = 'hex-grid';
-      hexGridContainer.style.position = 'fixed';
-      hexGridContainer.style.top = '0';
-      hexGridContainer.style.left = '0';
-      hexGridContainer.style.width = '100%';
-      hexGridContainer.style.height = '100%';
-      hexGridContainer.style.zIndex = '1';
-      hexGridContainer.style.pointerEvents = 'none';
-      document.body.appendChild(hexGridContainer);
-      
-      // Define hexagon size and spacing - larger hexagons for fewer elements
-      const hexSize = 70; // Increased from 50px for better performance
-      
-      // Get viewport dimensions
-      const viewportWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-      const viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-      
-      // Calculate fewer hexagons for better performance
-      const cols = Math.ceil(viewportWidth / (hexSize * 3)) + 1; // Reduced density
-      const rows = Math.ceil(viewportHeight / (hexSize * 2)) + 1; // Reduced density
-      
-      // Use DocumentFragment for better performance when adding many elements
-      const fragment = document.createDocumentFragment();
-      
-      // Precompute colors and opacities to avoid repeated array creations
-      const colors = ['#00F0FF', '#CC33FF', '#FFCC00', '#111111', '#222222'];
-      const colorsLength = colors.length;
-      
-      // Create hexagons - fewer for better performance
-      for(let row = 0; row < rows; row++) {
-        // Only create hexagons for every other row for performance
-        if (row % 2 === 0) continue;
-        
-        for(let col = 0; col < cols; col++) {
-          // Only create hexagons for every other column for performance
-          if (col % 2 === 0) continue;
-          
-          const hexagon = document.createElement('div');
-          hexagon.className = 'hexagon';
-          
-          // Position with offset for every other row
-          const offset = row % 2 === 0 ? 0 : hexSize * 0.75;
-          hexagon.style.left = (col * hexSize * 1.5 + offset) + 'px';
-          hexagon.style.top = (row * hexSize * 0.866) + 'px';
-          
-          // Random cyberpunk color - more efficient random color selection
-          const randomColor = colors[Math.floor(Math.random() * colorsLength)];
-          hexagon.style.backgroundColor = randomColor;
-          
-          // Random animation delay for pulse effect - limit animation complexity
-          // Only animate 50% of hexagons for better performance
-          if (Math.random() > 0.5) {
-            hexagon.style.animationDelay = (Math.random() * 5) + 's';
-          } else {
-            hexagon.classList.add('no-animation'); // Don't animate this hexagon
-          }
-          
-          // Add opacity variations
-          hexagon.style.opacity = (Math.random() * 0.2 + 0.05).toString();
-          
-          fragment.appendChild(hexagon);
-        }
-      }
-      
-      // Add circuit lines - reduced number significantly for performance
-      const circuitCount = Math.min(8, Math.floor((cols * rows) / 20));
-      
-      // Precompute circuit colors
-      const circuitColors = ['#00F0FF', '#CC33FF', '#FFCC00', '#90D8E4'];
-      const circuitColorsLength = circuitColors.length;
-      
-      for(let i = 0; i < circuitCount; i++) {
-        const circuit = document.createElement('div');
-        circuit.className = 'circuit-line';
-        
-        // Random position
-        circuit.style.left = (Math.random() * viewportWidth) + 'px';
-        circuit.style.top = (Math.random() * viewportHeight) + 'px';
-        
-        // Random length and angle
-        const length = Math.random() * 200 + 50;
-        circuit.style.width = length + 'px';
-        circuit.style.transform = 'rotate(' + (Math.random() * 360) + 'deg)';
-        
-        // Random color - more efficient color selection
-        const randomColor = circuitColors[Math.floor(Math.random() * circuitColorsLength)];
-        circuit.style.backgroundColor = randomColor;
-        circuit.style.boxShadow = '0 0 8px ' + randomColor;
-        
-        // Random animation delay
-        circuit.style.animationDelay = (Math.random() * 3) + 's';
-        
-        fragment.appendChild(circuit);
-      }
-      
-      // Add all elements at once for better performance
-      hexGridContainer.appendChild(fragment);
+      const backgroundContainer = document.createElement('div');
+      backgroundContainer.id = 'background-container';
+      backgroundContainer.style.position = 'fixed';
+      backgroundContainer.style.top = '0';
+      backgroundContainer.style.left = '0';
+      backgroundContainer.style.width = '100%';
+      backgroundContainer.style.height = '100%';
+      backgroundContainer.style.zIndex = '1';
+      backgroundContainer.style.pointerEvents = 'none';
+      backgroundContainer.style.backgroundColor = '#0E0E10'; // Set the background color
+      document.body.appendChild(backgroundContainer);
     }
     
-    // Initialize and handle browser events
+    // Simple resize handler - since we just have a background container now
     const resizeHandler = () => {
-      // Clear and rebuild on resize for better performance
-      const hexGrid = document.getElementById('hex-grid');
-      if (hexGrid) {
-        // Remove all children first
-        while (hexGrid.firstChild) {
-          hexGrid.removeChild(hexGrid.firstChild);
-        }
-        // Rebuild with optimized performance settings
-        initGameBackground();
+      // Clear and rebuild on resize
+      const backgroundContainer = document.getElementById('background-container');
+      if (backgroundContainer) {
+        backgroundContainer.remove();
       }
+      // Rebuild the background
+      initGameBackground();
     };
     
     window.addEventListener('load', initGameBackground);
@@ -391,10 +261,10 @@ function Router(): JSX.Element {
         style.parentNode.removeChild(style);
       }
       
-      // Remove hex grid container
-      const hexGrid = document.getElementById('hex-grid');
-      if (hexGrid && hexGrid.parentNode) {
-        hexGrid.parentNode.removeChild(hexGrid);
+      // Remove background container
+      const backgroundContainer = document.getElementById('background-container');
+      if (backgroundContainer && backgroundContainer.parentNode) {
+        backgroundContainer.parentNode.removeChild(backgroundContainer);
       }
     };
   }, []);
@@ -407,12 +277,15 @@ function Router(): JSX.Element {
       display: "flex",
       flexDirection: "column",
       position: "relative",
-      overflow: "visible"
+      overflow: "hidden", /* Change back to hidden to prevent horizontal scroll */
+      overflowY: "auto", /* But allow vertical scrolling */
+      width: "100%",
+      maxWidth: "100vw" /* Enforce maximum width */
     }}>
-      {/* Background elements wrapper with lower z-index */}
+      {/* Simple background wrapper with lower z-index */}
       <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", zIndex: 0, pointerEvents: "none" }}>
-        {/* Interactive hexgrid background */}
-        <div id="hex-grid" style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}></div>
+        {/* Background container */}
+        <div id="background-container"></div>
         
         {/* Radial gradient overlay */}
         <div style={{ 
@@ -473,17 +346,23 @@ function Router(): JSX.Element {
       {/* Fixed navbar */}
       <NavBar />
       
-      {/* Spacer div to push content below navbar */}
-      <div style={{ height: "50px" }}></div>
+      {/* Spacer to account for navbar height */}
+      <div style={{ height: "64px", flexShrink: 0 }}></div>
+      
+      {/* Main content area */}
       <main style={{ 
         paddingTop: "0", 
         paddingBottom: "0", 
-        marginTop: "5px",
-        flex: "1 0 auto",
+        marginTop: "0",
+        flex: "1 0 auto", /* Changed from 1 1 auto to 1 0 auto to prevent main from shrinking */
         position: "relative",
         zIndex: "5",
         width: "100%",
-        overflowY: "visible"
+        maxWidth: "100%",
+        overflowX: "hidden", /* Prevent horizontal scrolling */
+        overflowY: "visible", /* Allow vertical scrolling */
+        display: "flex",
+        flexDirection: "column"
       }}>
         <Switch>
           <Route path="/" component={Home} />
@@ -493,6 +372,8 @@ function Router(): JSX.Element {
           <Route path="/profile" component={Profile} />
           <Route path="/wallet" component={Wallet} />
           <Route path="/admin" component={Admin} />
+          <Route path="/about" component={About} />
+          <Route path="/legal" component={Legal} />
           <Route path="/charts/:symbol" component={CandlestickChartPage} />
           <Route component={NotFound} />
         </Switch>
@@ -506,6 +387,22 @@ function App() {
   useEffect(() => {
     // Set theme to dark mode by default
     document.documentElement.classList.add('dark');
+    
+    // Prevent horizontal scrolling on mobile
+    const style = document.createElement('style');
+    style.textContent = `
+      html, body {
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      if (style.parentNode) {
+        style.parentNode.removeChild(style);
+      }
+    };
   }, []);
 
   return (
