@@ -1,135 +1,267 @@
 import { useState, useEffect } from "react";
-import { useLocation, useRoute } from "wouter";
-// NavBar is rendered at the App level
-import WalletConnectModal from "@/components/WalletConnectModal";
-import CreateGamePanel from "@/components/CreateGamePanel";
-import TradingChart from "@/components/TradingChart";
-import MarketTable from "@/components/MarketTable";
-import LeaderboardPreview from "@/components/LeaderboardPreview";
-import GameItem from "@/components/GameItem";
-import PostMatchSummary from "@/components/PostMatchSummary";
-import { useWallet } from "@/hooks/useWallet";
-import { useMatch } from "@/hooks/useMatch";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
-  const { connected } = useWallet();
-  const { activeMatch, matchEnded } = useMatch();
-  const [showModal, setShowModal] = useState(false);
-  const [, setLocation] = useLocation();
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    contactId: ""
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
   
-  // Parse URL parameters for market selection
-  const [, params] = useRoute('/:path*');
-  const urlParams = new URLSearchParams(window.location.search);
-  const marketParam = urlParams.get('market') || 'BTC-PERP';
-  const timeframeParam = urlParams.get('timeframe') || '1h';
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
   
-  // Sample active games data
-  const activeGames = [
-    { id: "1", player1: "Alice", player2: "Bob", isActive: true },
-    { id: "2", player1: "Carol", player2: "David", isActive: true },
-    { id: "3", player1: "Emma", player2: "Frank", isActive: true },
-  ];
-  
-  // Redirect to match page when an active match is found
-  useEffect(() => {
-    if (activeMatch && !matchEnded) {
-      window.location.href = '/match';
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate form fields
+    if (!formData.name.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter your name.",
+        variant: "destructive",
+      });
+      return;
     }
-  }, [activeMatch, matchEnded]);
+    
+    if (!formData.email || !/^\S+@\S+\.\S+$/.test(formData.email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!formData.contactId.trim()) {
+      toast({
+        title: "Contact ID Required",
+        description: "Please enter your Telegram or Discord ID.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      toast({
+        title: "Request Received!",
+        description: "We'll notify you when early access is available.",
+      });
+      setFormData({
+        name: "",
+        email: "",
+        contactId: ""
+      });
+      setIsSubmitting(false);
+    }, 1500);
+  };
+  
+  // Animation variants for staggered entrance
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+        delayChildren: 0.3,
+      }
+    }
+  };
+  
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        damping: 12,
+        stiffness: 100
+      }
+    }
+  };
 
   return (
-    <div className="text-[#F2F2F2] mt-2 overflow-visible">
-      {/* Main Content */}
-      <div className="container mx-auto px-4 pt-3 pb-6 max-w-screen-xl relative z-10">
-        {/* Wallet Connect Modal */}
-        <WalletConnectModal show={showModal} onClose={() => setShowModal(false)} />
-
-        {matchEnded ? (
-          // Show post-match summary if the match has ended
-          <PostMatchSummary />
-        ) : (
-          // Main Layout
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Left Column - Create Game */}
-            <div className="md:col-span-1">
-              <div className="backdrop-blur-md bg-[#0E0E10]/40 rounded-xl border border-[#00F0FF]/20 shadow-[0_0_15px_rgba(0,240,255,0.15)] overflow-hidden relative p-1">
-                <CreateGamePanel />
-              </div>
-              
-              {/* Games Section */}
-              <div className="mt-8 backdrop-blur-md bg-[#0E0E10]/50 rounded-xl border border-[#CC33FF]/30 p-6 shadow-[0_0_20px_rgba(204,51,255,0.15)] overflow-hidden relative">
-                {/* Animated corner effect */}
-                <div className="absolute bottom-0 left-0 w-20 h-20">
-                  <div className="absolute bottom-0 left-0 w-[2px] h-12 bg-[#CC33FF] animate-pulse shadow-[0_0_8px_rgba(204,51,255,0.8)]">
-                    <div className="absolute -right-[1px] top-0 w-[4px] h-[4px] rounded-full bg-[#CC33FF] shadow-[0_0_5px_rgba(204,51,255,1)]"></div>
-                  </div>
-                  <div className="absolute bottom-0 left-0 w-12 h-[2px] bg-[#CC33FF] animate-pulse shadow-[0_0_8px_rgba(204,51,255,0.8)]">
-                    <div className="absolute -top-[1px] right-0 w-[4px] h-[4px] rounded-full bg-[#CC33FF] shadow-[0_0_5px_rgba(204,51,255,1)]"></div>
-                  </div>
-                </div>
-                
-                {/* Top right accent */}
-                <div className="absolute top-0 right-0 w-20 h-20">
-                  <div className="absolute top-0 right-0 w-[2px] h-12 bg-[#CC33FF] animate-pulse shadow-[0_0_8px_rgba(204,51,255,0.8)]">
-                    <div className="absolute -left-[1px] bottom-0 w-[4px] h-[4px] rounded-full bg-[#CC33FF] shadow-[0_0_5px_rgba(204,51,255,1)]"></div>
-                  </div>
-                  <div className="absolute top-0 right-0 w-12 h-[2px] bg-[#CC33FF] animate-pulse shadow-[0_0_8px_rgba(204,51,255,0.8)]">
-                    <div className="absolute -bottom-[1px] left-0 w-[4px] h-[4px] rounded-full bg-[#CC33FF] shadow-[0_0_5px_rgba(204,51,255,1)]"></div>
-                  </div>
-                </div>
-                
-                <h2 className="text-2xl font-bold mb-6 relative inline-block">
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#00F0FF] to-[#90D8E4]">GAMES</span>
-                  <div className="absolute -bottom-2 left-0 w-full h-[1px] bg-gradient-to-r from-[#00F0FF] to-transparent"></div>
-                </h2>
-                
-                <div className="space-y-3">
-                  {activeGames.map((game) => (
-                    <div key={game.id} className="backdrop-blur-sm bg-[#FFFFFF]/5 rounded-lg p-3 border border-[#FFFFFF]/10 hover:border-[#00F0FF]/30 transition-all duration-300 hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]">
-                      <GameItem 
-                        id={game.id}
-                        player1={game.player1}
-                        player2={game.player2}
-                        isActive={game.isActive}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
+    <div className="flex flex-col min-h-[calc(100vh-120px)] text-white overflow-hidden relative">
+      {/* Background gradient waves */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-[#0E0E10] via-[#1A1A1E] to-transparent opacity-80"></div>
+        <div className="absolute -top-[300px] -left-[300px] w-[900px] h-[900px] rounded-full bg-[#00F0FF]/5 blur-[120px]"></div>
+        <div className="absolute -top-[150px] -right-[350px] w-[700px] h-[700px] rounded-full bg-[#CC33FF]/5 blur-[100px]"></div>
+        <div className="absolute top-[40%] -left-[200px] w-[600px] h-[600px] rounded-full bg-[#FFCC00]/5 blur-[80px]"></div>
+        
+        {/* Animated circuit lines */}
+        <div className="absolute top-[15%] right-[10%] w-[2px] h-[150px] bg-gradient-to-b from-[#00F0FF] to-transparent opacity-50"></div>
+        <div className="absolute top-[15%] right-[10%] w-[100px] h-[2px] bg-gradient-to-r from-[#00F0FF] to-transparent opacity-50"></div>
+        
+        <div className="absolute bottom-[20%] left-[15%] w-[2px] h-[100px] bg-gradient-to-t from-[#CC33FF] to-transparent opacity-40"></div>
+        <div className="absolute bottom-[20%] left-[15%] w-[80px] h-[2px] bg-gradient-to-r from-[#CC33FF] to-transparent opacity-40"></div>
+        
+        {/* Diagonal accent */}
+        <div className="absolute top-[30%] right-[30%] w-[300px] h-[3px] bg-gradient-to-r from-[#FFCC00]/60 to-transparent transform rotate-45 opacity-30"></div>
+      </div>
+      
+      {/* Main content */}
+      <motion.div 
+        className="container mx-auto px-4 py-16 md:py-24 flex-grow flex flex-col justify-center items-center relative z-10"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
+        <motion.div 
+          className="text-center max-w-3xl mx-auto"
+          variants={itemVariants}
+        >
+          <motion.div 
+            className="mb-4 inline-flex justify-center items-center px-4 py-2 rounded-full bg-gradient-to-r from-[#00F0FF]/20 to-[#CC33FF]/20 backdrop-blur-md border border-white/10"
+            variants={itemVariants}
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 400, damping: 10 }}
+          >
+            <span className="text-sm font-medium tracking-wide">COMING SOON</span>
+          </motion.div>
+          
+          <motion.h1 
+            className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 font-sans tracking-tight"
+            variants={itemVariants}
+          >
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#00F0FF] via-white to-[#CC33FF]">
+              THE FUTURE OF CRYPTO
+            </span>
+            <br />
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#FFCC00] to-[#FF6600]">
+              GAMING IS HERE
+            </span>
+          </motion.h1>
+          
+          <motion.p 
+            className="text-lg md:text-xl text-white/70 mb-10 max-w-2xl mx-auto leading-relaxed"
+            variants={itemVariants}
+          >
+            Experience the most advanced crypto trading game with real-time markets, 
+            competitive gameplay, and cutting-edge technology. Request early access now.
+          </motion.p>
+          
+          <motion.form 
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-4 max-w-lg mx-auto w-full"
+            variants={itemVariants}
+          >
+            <div className="relative">
+              <Input
+                type="text"
+                name="name"
+                placeholder="Your Name"
+                value={formData.name}
+                onChange={handleChange}
+                className="bg-white/5 border-white/10 backdrop-blur-lg py-6 px-4 rounded-xl text-white placeholder-white/50 focus:border-[#00F0FF]/50 focus:ring-[#00F0FF]/20 focus:ring-opacity-50 w-full transition-all duration-300"
+              />
+              <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-[#00F0FF] via-[#CC33FF] to-[#FFCC00] opacity-50 -z-10 blur-[2px] group-hover:opacity-70 transition-opacity"></div>
             </div>
             
-            {/* Middle & Right Columns - Chart and Market Data */}
-            <div className="md:col-span-2 space-y-8">
-              {/* Trading Chart with Market Selection */}
-              <div className="backdrop-blur-md bg-[#0E0E10]/30 rounded-xl border border-[#90D8E4]/20 shadow-[0_0_15px_rgba(144,216,228,0.15)] overflow-hidden relative p-1">
-                <div className="absolute top-0 right-0 w-24 h-24">
-                  <div className="absolute top-0 right-0 w-[2px] h-12 bg-[#90D8E4] shadow-[0_0_8px_rgba(144,216,228,0.6)]"></div>
-                  <div className="absolute top-0 right-0 w-12 h-[2px] bg-[#90D8E4] shadow-[0_0_8px_rgba(144,216,228,0.6)]"></div>
-                </div>
-                <TradingChart market={marketParam} />
-              </div>
-              
-              {/* Market Table */}
-              <div className="backdrop-blur-md bg-[#0E0E10]/40 rounded-xl border border-[#FFCC00]/20 shadow-[0_0_15px_rgba(255,204,0,0.1)] overflow-hidden relative p-1">
-                <div className="absolute bottom-0 left-0 w-24 h-24">
-                  <div className="absolute bottom-0 left-0 w-[2px] h-12 bg-[#FFCC00] shadow-[0_0_8px_rgba(255,204,0,0.6)]"></div>
-                  <div className="absolute bottom-0 left-0 w-12 h-[2px] bg-[#FFCC00] shadow-[0_0_8px_rgba(255,204,0,0.6)]"></div>
-                </div>
-                <MarketTable />
-              </div>
-              
-              {/* Leaderboard Preview */}
-              <div className="backdrop-blur-md bg-[#0E0E10]/40 rounded-xl border border-[#FF6600]/20 shadow-[0_0_15px_rgba(255,102,0,0.1)] overflow-hidden relative p-1">
-                <div className="absolute top-0 left-0 w-24 h-24">
-                  <div className="absolute top-0 left-0 w-[2px] h-12 bg-[#FF6600] shadow-[0_0_8px_rgba(255,102,0,0.6)]"></div>
-                  <div className="absolute top-0 left-0 w-12 h-[2px] bg-[#FF6600] shadow-[0_0_8px_rgba(255,102,0,0.6)]"></div>
-                </div>
-                <LeaderboardPreview />
-              </div>
+            <div className="relative">
+              <Input
+                type="email"
+                name="email"
+                placeholder="Your Email"
+                value={formData.email}
+                onChange={handleChange}
+                className="bg-white/5 border-white/10 backdrop-blur-lg py-6 px-4 rounded-xl text-white placeholder-white/50 focus:border-[#00F0FF]/50 focus:ring-[#00F0FF]/20 focus:ring-opacity-50 w-full transition-all duration-300"
+              />
+              <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-[#00F0FF] via-[#CC33FF] to-[#FFCC00] opacity-50 -z-10 blur-[2px] group-hover:opacity-70 transition-opacity"></div>
             </div>
-          </div>
-        )}
-      </div>
+            
+            <div className="relative">
+              <Input
+                type="text"
+                name="contactId"
+                placeholder="Your Telegram/Discord ID"
+                value={formData.contactId}
+                onChange={handleChange}
+                className="bg-white/5 border-white/10 backdrop-blur-lg py-6 px-4 rounded-xl text-white placeholder-white/50 focus:border-[#00F0FF]/50 focus:ring-[#00F0FF]/20 focus:ring-opacity-50 w-full transition-all duration-300"
+              />
+              <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-[#00F0FF] via-[#CC33FF] to-[#FFCC00] opacity-50 -z-10 blur-[2px] group-hover:opacity-70 transition-opacity"></div>
+            </div>
+            
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-gradient-to-r from-[#00F0FF] to-[#CC33FF] hover:from-[#00E0FF] hover:to-[#B333FF] text-black font-semibold py-6 px-8 rounded-xl transition-all duration-300 shadow-[0_0_15px_rgba(0,240,255,0.5)] hover:shadow-[0_0_25px_rgba(0,240,255,0.8)]"
+            >
+              {isSubmitting ? (
+                <div className="flex items-center">
+                  <div className="animate-spin mr-2 h-4 w-4 border-2 border-black border-t-transparent rounded-full"></div>
+                  Processing...
+                </div>
+              ) : (
+                "Request Early Access"
+              )}
+            </Button>
+          </motion.form>
+          
+          <motion.div 
+            className="mt-12 text-white/40 text-sm"
+            variants={itemVariants}
+          >
+            <p>Join our exclusive waiting list. No spam, just updates about launch.</p>
+          </motion.div>
+        </motion.div>
+        
+        {/* Features section */}
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 w-full max-w-4xl"
+          variants={itemVariants}
+        >
+          <motion.div 
+            className="backdrop-blur-md bg-white/5 rounded-xl border border-white/10 p-6 hover:border-[#00F0FF]/30 transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,240,255,0.2)]"
+            whileHover={{ y: -10, transition: { duration: 0.3 } }}
+            variants={itemVariants}
+          >
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#90D8E4]/30 flex items-center justify-center mb-4 shadow-[0_0_15px_rgba(0,240,255,0.4)]">
+              <i className="ri-gamepad-line text-xl"></i>
+            </div>
+            <h3 className="text-xl font-bold mb-2">Competitive Gaming</h3>
+            <p className="text-white/60">Challenge other players in real-time trading competitions</p>
+          </motion.div>
+          
+          <motion.div 
+            className="backdrop-blur-md bg-white/5 rounded-xl border border-white/10 p-6 hover:border-[#CC33FF]/30 transition-all duration-300 hover:shadow-[0_0_20px_rgba(204,51,255,0.2)]"
+            whileHover={{ y: -10, transition: { duration: 0.3 } }}
+            variants={itemVariants}
+          >
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#CC33FF] to-[#CC33FF]/30 flex items-center justify-center mb-4 shadow-[0_0_15px_rgba(204,51,255,0.4)]">
+              <i className="ri-line-chart-line text-xl"></i>
+            </div>
+            <h3 className="text-xl font-bold mb-2">Live Markets</h3>
+            <p className="text-white/60">Trade with real-time cryptocurrency market data</p>
+          </motion.div>
+          
+          <motion.div 
+            className="backdrop-blur-md bg-white/5 rounded-xl border border-white/10 p-6 hover:border-[#FFCC00]/30 transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,204,0,0.2)]"
+            whileHover={{ y: -10, transition: { duration: 0.3 } }}
+            variants={itemVariants}
+          >
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FFCC00] to-[#FFCC00]/30 flex items-center justify-center mb-4 shadow-[0_0_15px_rgba(255,204,0,0.4)]">
+              <i className="ri-trophy-line text-xl"></i>
+            </div>
+            <h3 className="text-xl font-bold mb-2">Rewards & Leaderboards</h3>
+            <p className="text-white/60">Win prizes and climb the global rankings</p>
+          </motion.div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

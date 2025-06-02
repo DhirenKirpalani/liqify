@@ -331,20 +331,18 @@ export default function NavBar() {
                     </div>
                     <ScrollArea className="flex-1 p-4">
                       <nav className="flex flex-col space-y-4">
-                        <div 
-                          onClick={(e) => {
-                            // Set home as active section
-                            setActiveSection('home');
-                            // Use handleHomeClick which handles both navigation and scrolling
-                            handleHomeClick(e);
-                            // Close mobile menu
+                        <Link href="/" onClick={() => {
+                            setActiveSection(null);
                             setMobileMenuOpen(false);
+                            scrollToTop();
                           }}
-                          className={`flex items-center p-2 rounded-md cursor-pointer ${location === '/' && activeSection !== 'leaderboard' ? 'bg-[#00F0FF]/10 text-white' : 'text-text-secondary'}`}
                         >
-                          <i className="ri-home-5-line text-xl mr-3"></i>
-                          <span className="font-medium">Home</span>
-                        </div>
+                          <div className={`flex items-center p-2 rounded-md cursor-pointer ${location === '/' ? 'bg-[#00F0FF]/10 text-white' : 'text-text-secondary'}`}
+                          >
+                            <i className="ri-home-5-line text-xl mr-3"></i>
+                            <span className="font-medium">Home</span>
+                          </div>
+                        </Link>
                         <Link href="/match" onClick={() => {
                           setActiveSection(null);
                           setMobileMenuOpen(false);
@@ -362,14 +360,19 @@ export default function NavBar() {
                             // Close mobile menu
                             setMobileMenuOpen(false);
                             
-                            // If not on homepage, navigate to home first
-                            if (location !== '/') {
-                              setLocation('/');
-                              // The scrollToLeaderboard will be triggered by the useEffect when location changes
+                            // Navigate to games page and scroll to leaderboard section
+                            if (location !== '/games') {
+                              setLocation('/games');
+                              // Add a delay to ensure the page has loaded before scrolling
+                              setTimeout(() => {
+                                const leaderboardSection = document.getElementById('leaderboard-section');
+                                if (leaderboardSection) {
+                                  leaderboardSection.scrollIntoView({ behavior: 'smooth' });
+                                }
+                              }, 500);
                             } else {
-                              // Already on homepage, scroll immediately to leaderboard section
-                              // Using the same technique as in desktop navigation
-                              const leaderboardSection = document.querySelector('#leaderboard-section');
+                              // Already on games page, scroll immediately
+                              const leaderboardSection = document.getElementById('leaderboard-section');
                               if (leaderboardSection) {
                                 leaderboardSection.scrollIntoView({ behavior: 'smooth' });
                               }
@@ -380,15 +383,55 @@ export default function NavBar() {
                           <i className="ri-bar-chart-line text-xl mr-3"></i>
                           <span className="font-medium">Leaderboard</span>
                         </div>
-                        <Link href="/games" onClick={() => {
-                          setActiveSection(null);
-                          setMobileMenuOpen(false);
-                        }}>
-                          <div className={`flex items-center p-2 rounded-md ${location === '/games' ? 'bg-[#00F0FF]/10 text-white' : 'text-text-secondary'}`}>
-                            <i className="ri-gamepad-line text-xl mr-3"></i>
-                            <span className="font-medium">Games</span>
-                          </div>
-                        </Link>
+                        <div 
+                          onClick={(e) => {
+                            // Set games as active section
+                            setActiveSection('games');
+                            // Navigate to games and scroll to top
+                            setLocation('/games');
+                            // Close mobile menu
+                            setMobileMenuOpen(false);
+                            // Scroll to top after navigation
+                            setTimeout(() => {
+                              scrollToTop();
+                            }, 300);
+                          }}
+                          className={`flex items-center p-2 rounded-md cursor-pointer ${location === '/games' ? 'bg-[#00F0FF]/10 text-white' : 'text-text-secondary'}`}
+                        >
+                          <i className="ri-gamepad-line text-xl mr-3"></i>
+                          <span className="font-medium">Games</span>
+                        </div>
+                        <div 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            // Set leaderboard as active section
+                            setActiveSection('leaderboard');
+                            
+                            // Navigate to games page and scroll to leaderboard section
+                            if (location !== '/games') {
+                              setLocation('/games');
+                              // Add a delay to ensure the page has loaded before scrolling
+                              setTimeout(() => {
+                                const leaderboardSection = document.getElementById('leaderboard-section');
+                                if (leaderboardSection) {
+                                  leaderboardSection.scrollIntoView({ behavior: 'smooth' });
+                                }
+                              }, 500);
+                            } else {
+                              // Already on games page, scroll immediately
+                              const leaderboardSection = document.getElementById('leaderboard-section');
+                              if (leaderboardSection) {
+                                leaderboardSection.scrollIntoView({ behavior: 'smooth' });
+                              }
+                            }
+                            // Close mobile menu
+                            setMobileMenuOpen(false);
+                          }}
+                          className={`flex items-center p-2 rounded-md cursor-pointer ${activeSection === 'leaderboard' ? 'bg-[#00F0FF]/10 text-white' : 'text-text-secondary'}`}
+                        >
+                          <i className="ri-bar-chart-line text-xl mr-3"></i>
+                          <span className="font-medium">Leaderboard</span>
+                        </div>
                         <Link href="/watch" onClick={() => {
                           setActiveSection(null);
                           setMobileMenuOpen(false);
@@ -396,15 +439,6 @@ export default function NavBar() {
                           <div className={`flex items-center p-2 rounded-md ${location === '/watch' ? 'bg-[#00F0FF]/10 text-white' : 'text-text-secondary'}`}>
                             <i className="ri-tv-line text-xl mr-3"></i>
                             <span className="font-medium">Watch</span>
-                          </div>
-                        </Link>
-                        <Link href="/reels" onClick={() => {
-                          setActiveSection(null);
-                          setMobileMenuOpen(false);
-                        }}>
-                          <div className={`flex items-center p-2 rounded-md ${location === '/reels' ? 'bg-[#00F0FF]/10 text-white' : 'text-text-secondary'}`}>
-                            <i className="ri-film-line text-xl mr-3"></i>
-                            <span className="font-medium">Reels</span>
                           </div>
                         </Link>
                         <div 
@@ -493,17 +527,33 @@ export default function NavBar() {
           
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center space-x-8 ml-14">
-            <a 
-              href="#" 
-              onClick={(e) => {
-                setActiveSection('home');
-                // Use handleHomeClick which handles both navigation and scrolling
-                handleHomeClick(e);
+            <Link 
+              href="/" 
+              onClick={() => {
+                setActiveSection(null);
+                scrollToTop();
               }}
               className="cursor-pointer"
             >
-              <span className={`text-base font-medium hover:text-white transition-colors ${location === '/' && activeSection !== 'leaderboard' ? 'text-white' : 'text-text-secondary'}`}>
+              <span className={`text-base font-medium hover:text-white transition-colors ${location === '/' ? 'text-white' : 'text-text-secondary'}`}>
                 Home
+              </span>
+            </Link>
+            <a 
+              href="#" 
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveSection('games');
+                setLocation('/games');
+                // Scroll to top after navigation
+                setTimeout(() => {
+                  scrollToTop();
+                }, 300);
+              }}
+              className="cursor-pointer"
+            >
+              <span className={`text-base font-medium hover:text-white transition-colors ${location === '/games' ? 'text-white' : 'text-text-secondary'}`}>
+                Games
               </span>
             </a>
             <a 
@@ -513,13 +563,22 @@ export default function NavBar() {
                 // Set leaderboard as active section
                 setActiveSection('leaderboard');
                 
-                // If not on homepage, navigate to home first then scroll
-                if (location !== '/') {
-                  setLocation('/');
-                  // The scrollToLeaderboard will be triggered by the useEffect when location changes
+                // Navigate to games page and scroll to leaderboard section
+                if (location !== '/games') {
+                  setLocation('/games');
+                  // Add a delay to ensure the page has loaded before scrolling
+                  setTimeout(() => {
+                    const leaderboardSection = document.getElementById('leaderboard-section');
+                    if (leaderboardSection) {
+                      leaderboardSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }, 500);
                 } else {
-                  // Already on homepage, scroll immediately
-                  scrollToLeaderboard();
+                  // Already on games page, scroll immediately
+                  const leaderboardSection = document.getElementById('leaderboard-section');
+                  if (leaderboardSection) {
+                    leaderboardSection.scrollIntoView({ behavior: 'smooth' });
+                  }
                 }
               }}
               className="cursor-pointer"
@@ -528,11 +587,6 @@ export default function NavBar() {
                 Leaderboard
               </span>
             </a>
-            <Link href="/games" onClick={() => setActiveSection(null)}>
-              <span className={`text-base font-medium hover:text-white transition-colors ${location === '/games' ? 'text-white' : 'text-text-secondary'}`}>
-                Games
-              </span>
-            </Link>
             <Link href="/watch" onClick={() => setActiveSection(null)}>
               <span className={`text-base font-medium hover:text-white transition-colors ${location === '/watch' ? 'text-white' : 'text-text-secondary'}`}>
                 Watch

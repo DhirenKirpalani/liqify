@@ -11,6 +11,7 @@ import { MatchProvider } from "@/hooks/useMatch";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import Home from "@/pages/Home";
+import Games from "@/pages/Games";
 import Match from "@/pages/Match";
 import Leaderboard from "@/pages/Leaderboard";
 import Reels from "@/pages/Reels";
@@ -366,6 +367,7 @@ function Router(): JSX.Element {
       }}>
         <Switch>
           <Route path="/" component={Home} />
+          <Route path="/games" component={Games} />
           <Route path="/match" component={Match} />
           <Route path="/leaderboard" component={Leaderboard} />
           <Route path="/reels" component={Reels} />
