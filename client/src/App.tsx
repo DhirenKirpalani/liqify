@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { WebSocketProvider } from "@/hooks/useWebSocket";
 import { WalletProvider } from "@/hooks/useWallet";
 import { MatchProvider } from "@/hooks/useMatch";
+import SplashScreen from "@/components/SplashScreen";
 
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
@@ -24,6 +25,26 @@ import About from "@/pages/About";
 import Legal from "@/pages/Legal";
 
 function Router(): JSX.Element {
+  console.log('ROUTER: Router component initialized');
+  
+  useEffect(() => {
+    console.log('ROUTER: Current location:', window.location.pathname);
+    console.log('ROUTER: All routes registered:', [
+      '/', '/games', '/match', '/leaderboard', '/reels', '/profile', 
+      '/wallet', '/admin', '/about', '/legal', '/charts/:symbol'
+    ]);
+    
+    const handleNavigation = () => {
+      console.log('ROUTER: Navigation occurred to:', window.location.pathname);
+    };
+    
+    window.addEventListener('popstate', handleNavigation);
+    
+    return () => {
+      window.removeEventListener('popstate', handleNavigation);
+    };
+  }, []);
+
   useEffect(() => {
     // Create styles for background and particles
     const style = document.createElement('style');
@@ -37,7 +58,7 @@ function Router(): JSX.Element {
         overflow: hidden;
         z-index: 0;
         pointer-events: none;
-        background-color: #0E0E10;
+        background-color: #012619;
       }
       
       /* Removed hexagon styles */
@@ -103,7 +124,7 @@ function Router(): JSX.Element {
       backgroundContainer.style.height = '100%';
       backgroundContainer.style.zIndex = '1';
       backgroundContainer.style.pointerEvents = 'none';
-      backgroundContainer.style.backgroundColor = '#0E0E10'; // Set the background color
+      backgroundContainer.style.backgroundColor = '#012619'; // Set the background color to Hyperliquid green
       document.body.appendChild(backgroundContainer);
     }
     
@@ -272,7 +293,7 @@ function Router(): JSX.Element {
 
   return (
     <div style={{ 
-      backgroundColor: "#0E0E10", 
+      backgroundColor: "#012619", 
       color: "#F2F2F2",
       minHeight: "100vh",
       display: "flex",
@@ -386,6 +407,8 @@ function Router(): JSX.Element {
 }
 
 function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
   useEffect(() => {
     // Set theme to dark mode by default
     document.documentElement.classList.add('dark');
@@ -414,6 +437,9 @@ function App() {
           <MatchProvider>
             <TooltipProvider>
               <Toaster />
+              {showSplash ? (
+                <SplashScreen onLoadingComplete={() => setShowSplash(false)} />
+              ) : null}
               <Router />
             </TooltipProvider>
           </MatchProvider>

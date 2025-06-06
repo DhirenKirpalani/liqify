@@ -96,22 +96,88 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-120px)] text-white overflow-hidden relative">
-      {/* Background gradient waves */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-[#0E0E10] via-[#1A1A1E] to-transparent opacity-80"></div>
-        <div className="absolute -top-[300px] -left-[300px] w-[900px] h-[900px] rounded-full bg-[#00F0FF]/5 blur-[120px]"></div>
-        <div className="absolute -top-[150px] -right-[350px] w-[700px] h-[700px] rounded-full bg-[#CC33FF]/5 blur-[100px]"></div>
-        <div className="absolute top-[40%] -left-[200px] w-[600px] h-[600px] rounded-full bg-[#FFCC00]/5 blur-[80px]"></div>
+        {/* Background gradient in Hyperliquid style */}
+        <div className="absolute inset-0 z-0 overflow-hidden" style={{ background: "linear-gradient(165deg, #012619 0%, #033d2d 50%, #003020 100%)" }}>
+        {/* Animated main blob shape */}
+        <div className="absolute top-[5%] left-[20%] right-[20%] w-[60%] h-[60%] rounded-full bg-[#05967d]/30 blur-[120px] animate-pulse-slow"></div>
         
-        {/* Animated circuit lines */}
-        <div className="absolute top-[15%] right-[10%] w-[2px] h-[150px] bg-gradient-to-b from-[#00F0FF] to-transparent opacity-50"></div>
-        <div className="absolute top-[15%] right-[10%] w-[100px] h-[2px] bg-gradient-to-r from-[#00F0FF] to-transparent opacity-50"></div>
+        {/* Animated secondary blob shapes with different animation durations */}
+        <motion.div 
+          initial={{ opacity: 0.7, scale: 1 }}
+          animate={{ 
+            opacity: [0.7, 0.5, 0.7],
+            scale: [1, 1.1, 1],
+            x: [0, 20, 0],
+            y: [0, -20, 0]
+          }} 
+          transition={{ 
+            repeat: Infinity, 
+            duration: 15,
+            ease: "easeInOut" 
+          }}
+          className="absolute -top-[150px] -left-[150px] w-[500px] h-[500px] rounded-full bg-[#04d9b2]/20 blur-[100px]"
+        />
         
-        <div className="absolute bottom-[20%] left-[15%] w-[2px] h-[100px] bg-gradient-to-t from-[#CC33FF] to-transparent opacity-40"></div>
-        <div className="absolute bottom-[20%] left-[15%] w-[80px] h-[2px] bg-gradient-to-r from-[#CC33FF] to-transparent opacity-40"></div>
+        <motion.div 
+          initial={{ opacity: 0.6, scale: 1 }}
+          animate={{ 
+            opacity: [0.6, 0.4, 0.6],
+            scale: [1, 1.15, 1],
+            x: [0, -30, 0], 
+            y: [0, 15, 0]
+          }} 
+          transition={{ 
+            repeat: Infinity, 
+            duration: 18,
+            ease: "easeInOut" 
+          }}
+          className="absolute top-[30%] -right-[150px] w-[450px] h-[450px] rounded-full bg-[#03b898]/15 blur-[120px]"
+        />
         
-        {/* Diagonal accent */}
-        <div className="absolute top-[30%] right-[30%] w-[300px] h-[3px] bg-gradient-to-r from-[#FFCC00]/60 to-transparent transform rotate-45 opacity-30"></div>
+        <motion.div 
+          initial={{ opacity: 0.5, scale: 1 }}
+          animate={{ 
+            opacity: [0.5, 0.3, 0.5],
+            scale: [1, 1.1, 1],
+            x: [0, 15, 0], 
+            y: [0, -10, 0]
+          }} 
+          transition={{ 
+            repeat: Infinity, 
+            duration: 12,
+            ease: "easeInOut" 
+          }}
+          className="absolute bottom-[10%] left-[10%] w-[400px] h-[400px] rounded-full bg-[#029e82]/20 blur-[80px]"
+        />
+
+        {/* Logo-like shape in the center with subtle rotation animation */}
+        <motion.div 
+          initial={{ rotate: 45, opacity: 0.5 }}
+          animate={{ 
+            rotate: [45, 50, 45], 
+            opacity: [0.5, 0.6, 0.5]  
+          }} 
+          transition={{ 
+            repeat: Infinity, 
+            duration: 10,
+            ease: "easeInOut" 
+          }}
+          className="absolute top-[20%] left-[35%] right-[35%] w-[30%] h-[20%] bg-[#05d6a9]/30 blur-[50px] rounded-[50%]"
+        />
+        
+        <motion.div 
+          initial={{ rotate: -45, opacity: 0.5 }}
+          animate={{ 
+            rotate: [-45, -40, -45], 
+            opacity: [0.5, 0.6, 0.5] 
+          }} 
+          transition={{ 
+            repeat: Infinity, 
+            duration: 8,
+            ease: "easeInOut" 
+          }}
+          className="absolute top-[20%] left-[35%] right-[35%] w-[30%] h-[20%] bg-[#05d6a9]/30 blur-[50px] rounded-[50%]"
+        />
       </div>
       
       {/* Main content */}
@@ -126,7 +192,7 @@ export default function Home() {
           variants={itemVariants}
         >
           <motion.div 
-            className="mb-4 inline-flex justify-center items-center px-4 py-2 rounded-full bg-gradient-to-r from-[#00F0FF]/20 to-[#CC33FF]/20 backdrop-blur-md border border-white/10"
+            className="mb-4 inline-flex justify-center items-center px-4 py-2 rounded-full bg-gradient-to-r from-[#05d6a9] via-[#02735e] to-[#05d6a9] backdrop-blur-md border border-[#05d6a9]/20"
             variants={itemVariants}
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -138,11 +204,11 @@ export default function Home() {
             className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 font-sans tracking-tight"
             variants={itemVariants}
           >
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#00F0FF] via-white to-[#CC33FF]">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#05d6a9] via-white to-[#05d6a9]">
               THE FUTURE OF CRYPTO
             </span>
             <br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#FFCC00] to-[#FF6600]">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#04eac2] to-[#04eac2]">
               GAMING IS HERE
             </span>
           </motion.h1>
@@ -157,49 +223,49 @@ export default function Home() {
           
           <motion.form 
             onSubmit={handleSubmit}
-            className="flex flex-col gap-4 max-w-lg mx-auto w-full"
+            className="flex flex-col gap-4 max-w-lg mx-auto w-full backdrop-blur-md bg-[#012619]/50 rounded-xl border border-[#05d6a9]/30 p-6 shadow-lg"
             variants={itemVariants}
           >
-            <div className="relative">
+            <div className="group relative">
               <Input
                 type="text"
                 name="name"
                 placeholder="Your Name"
                 value={formData.name}
                 onChange={handleChange}
-                className="bg-white/5 border-white/10 backdrop-blur-lg py-6 px-4 rounded-xl text-white placeholder-white/50 focus:border-[#00F0FF]/50 focus:ring-[#00F0FF]/20 focus:ring-opacity-50 w-full transition-all duration-300"
+                className="w-full bg-black/30 text-white border-0 rounded-xl py-6 px-4 focus:ring-2 focus:ring-[#05d6a9]/50 placeholder:text-white/50 shadow-inner"
               />
-              <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-[#00F0FF] via-[#CC33FF] to-[#FFCC00] opacity-50 -z-10 blur-[2px] group-hover:opacity-70 transition-opacity"></div>
+              <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-[#05d6a9] to-[#02735e] opacity-40 -z-10 blur-[2px] group-hover:opacity-60 transition-opacity"></div>
             </div>
             
-            <div className="relative">
+            <div className="group relative">
               <Input
                 type="email"
                 name="email"
                 placeholder="Your Email"
                 value={formData.email}
                 onChange={handleChange}
-                className="bg-white/5 border-white/10 backdrop-blur-lg py-6 px-4 rounded-xl text-white placeholder-white/50 focus:border-[#00F0FF]/50 focus:ring-[#00F0FF]/20 focus:ring-opacity-50 w-full transition-all duration-300"
+                className="w-full bg-black/30 text-white border-0 rounded-xl py-6 px-4 focus:ring-2 focus:ring-[#05d6a9]/50 placeholder:text-white/50 shadow-inner"
               />
-              <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-[#00F0FF] via-[#CC33FF] to-[#FFCC00] opacity-50 -z-10 blur-[2px] group-hover:opacity-70 transition-opacity"></div>
+              <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-[#05d6a9] to-[#02735e] opacity-40 -z-10 blur-[2px] group-hover:opacity-60 transition-opacity"></div>
             </div>
             
-            <div className="relative">
+            <div className="group relative">
               <Input
                 type="text"
                 name="contactId"
                 placeholder="Your Telegram/Discord ID"
                 value={formData.contactId}
                 onChange={handleChange}
-                className="bg-white/5 border-white/10 backdrop-blur-lg py-6 px-4 rounded-xl text-white placeholder-white/50 focus:border-[#00F0FF]/50 focus:ring-[#00F0FF]/20 focus:ring-opacity-50 w-full transition-all duration-300"
+                className="w-full bg-black/30 text-white border-0 rounded-xl py-6 px-4 focus:ring-2 focus:ring-[#05d6a9]/50 placeholder:text-white/50 shadow-inner"
               />
-              <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-[#00F0FF] via-[#CC33FF] to-[#FFCC00] opacity-50 -z-10 blur-[2px] group-hover:opacity-70 transition-opacity"></div>
+              <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-[#05d6a9] to-[#02735e] opacity-40 -z-10 blur-[2px] group-hover:opacity-60 transition-opacity"></div>
             </div>
             
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-gradient-to-r from-[#00F0FF] to-[#CC33FF] hover:from-[#00E0FF] hover:to-[#B333FF] text-black font-semibold py-6 px-8 rounded-xl transition-all duration-300 shadow-[0_0_15px_rgba(0,240,255,0.5)] hover:shadow-[0_0_25px_rgba(0,240,255,0.8)]"
+              className="bg-[#05d6a9] hover:bg-[#04eac2] text-[#012619] font-semibold py-6 px-8 rounded-xl transition-all duration-300 shadow-[0_0_15px_rgba(5,214,169,0.5)] hover:shadow-[0_0_25px_rgba(5,214,169,0.7)]"
             >
               {isSubmitting ? (
                 <div className="flex items-center">
@@ -213,10 +279,10 @@ export default function Home() {
           </motion.form>
           
           <motion.div 
-            className="mt-12 text-white/40 text-sm"
+            className="mt-12 text-white/60 text-sm"
             variants={itemVariants}
           >
-            <p>Join our exclusive waiting list. No spam, just updates about launch.</p>
+            <p>Join the hyper-performant blockchain ecosystem designed for all finance.</p>
           </motion.div>
         </motion.div>
         
@@ -226,39 +292,39 @@ export default function Home() {
           variants={itemVariants}
         >
           <motion.div 
-            className="backdrop-blur-md bg-white/5 rounded-xl border border-white/10 p-6 hover:border-[#00F0FF]/30 transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,240,255,0.2)]"
+            className="backdrop-blur-md bg-[#012619]/70 rounded-xl border border-[#05d6a9]/20 p-6 hover:border-[#05d6a9]/40 transition-all duration-300 hover:shadow-[0_0_20px_rgba(5,214,169,0.2)]" 
             whileHover={{ y: -10, transition: { duration: 0.3 } }}
             variants={itemVariants}
           >
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00F0FF] to-[#90D8E4]/30 flex items-center justify-center mb-4 shadow-[0_0_15px_rgba(0,240,255,0.4)]">
-              <i className="ri-gamepad-line text-xl"></i>
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#05d6a9] to-[#02735e]/50 flex items-center justify-center mb-4 shadow-[0_0_15px_rgba(5,214,169,0.4)]">
+              <i className="ri-exchange-line text-xl"></i>
             </div>
-            <h3 className="text-xl font-bold mb-2">Competitive Gaming</h3>
-            <p className="text-white/60">Challenge other players in real-time trading competitions</p>
+            <h3 className="text-xl font-bold mb-2">Start Trading</h3>
+            <p className="text-white/70">Trade perpetuals with deep liquidity and low fees</p>
           </motion.div>
           
           <motion.div 
-            className="backdrop-blur-md bg-white/5 rounded-xl border border-white/10 p-6 hover:border-[#CC33FF]/30 transition-all duration-300 hover:shadow-[0_0_20px_rgba(204,51,255,0.2)]"
+            className="backdrop-blur-md bg-[#012619]/70 rounded-xl border border-[#05d6a9]/20 p-6 hover:border-[#05d6a9]/40 transition-all duration-300 hover:shadow-[0_0_20px_rgba(5,214,169,0.2)]" 
             whileHover={{ y: -10, transition: { duration: 0.3 } }}
             variants={itemVariants}
           >
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#CC33FF] to-[#CC33FF]/30 flex items-center justify-center mb-4 shadow-[0_0_15px_rgba(204,51,255,0.4)]">
-              <i className="ri-line-chart-line text-xl"></i>
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#04eac2] to-[#02735e]/50 flex items-center justify-center mb-4 shadow-[0_0_15px_rgba(5,214,169,0.4)]">
+              <i className="ri-building-line text-xl"></i>
             </div>
-            <h3 className="text-xl font-bold mb-2">Live Markets</h3>
-            <p className="text-white/60">Trade with real-time cryptocurrency market data</p>
+            <h3 className="text-xl font-bold mb-2">Start Building</h3>
+            <p className="text-white/70">Build on a low latency blockchain with superior throughput</p>
           </motion.div>
           
           <motion.div 
-            className="backdrop-blur-md bg-white/5 rounded-xl border border-white/10 p-6 hover:border-[#FFCC00]/30 transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,204,0,0.2)]"
+            className="backdrop-blur-md bg-[#012619]/70 rounded-xl border border-[#05d6a9]/20 p-6 hover:border-[#05d6a9]/40 transition-all duration-300 hover:shadow-[0_0_20px_rgba(5,214,169,0.2)]" 
             whileHover={{ y: -10, transition: { duration: 0.3 } }}
             variants={itemVariants}
           >
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FFCC00] to-[#FFCC00]/30 flex items-center justify-center mb-4 shadow-[0_0_15px_rgba(255,204,0,0.4)]">
-              <i className="ri-trophy-line text-xl"></i>
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#03b898] to-[#02735e]/50 flex items-center justify-center mb-4 shadow-[0_0_15px_rgba(5,214,169,0.4)]">
+              <i className="ri-pie-chart-line text-xl"></i>
             </div>
-            <h3 className="text-xl font-bold mb-2">Rewards & Leaderboards</h3>
-            <p className="text-white/60">Win prizes and climb the global rankings</p>
+            <h3 className="text-xl font-bold mb-2">View Stats</h3>
+            <p className="text-white/70">Explore ecosystem metrics and trading statistics</p>
           </motion.div>
         </motion.div>
       </motion.div>

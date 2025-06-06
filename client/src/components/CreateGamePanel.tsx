@@ -75,16 +75,22 @@ export default function CreateGamePanel() {
       // First close any existing modal
       setShowGameCodeModal(false);
       
-      // Force a re-render cycle before showing the modal
-      setTimeout(() => {
-        setShowGameCodeModal(true);
-        console.log('Modal should be showing now');
+      // Force a re-render cycle 
+      const showInviteModal = (code: string) => {
+        console.log('Preparing to show modal for code:', code);
+        // Set code first
+        setGameCode(code);
         
-        // Extra safety - check if modal is showing after a delay
+        // Force a small delay to ensure state updates properly
         setTimeout(() => {
-          console.log('Modal state check:', showGameCodeModal);
-        }, 300);
-      }, 50);
+          setShowGameCodeModal(true);
+          console.log('Modal should be showing now');
+          
+          // Debug - this will still show false in the immediate context due to React's state batching
+          console.log('Modal state check (will update after render):', showGameCodeModal);
+        }, 50);
+      };
+      showInviteModal(inviteCode);
       
       // Also show a toast notification
       toast({

@@ -2140,7 +2140,12 @@ export const MatchProvider = ({ children }: { children: ReactNode }) => {
 
     const handleMessage = (event: MessageEvent) => {
       try {
+        // Add debug logging for all WebSocket messages
+        console.log('WebSocket message received in MatchProvider:', event.data);
+        
         const data = JSON.parse(event.data);
+        console.log('Parsed WebSocket data:', data);
+        console.log('Message type:', data.type);
         
         switch (data.type) {
           case 'match_found':
@@ -2156,11 +2161,11 @@ export const MatchProvider = ({ children }: { children: ReactNode }) => {
               description: `You are matched with ${match.opponent.username}`,
             });
             
-            // Force redirect to match page
-            console.log('Redirecting to match page due to match_found event');
-            setTimeout(() => {
-              window.location.href = '/match';
-            }, 500);
+            // Force redirect to match page - use a more reliable approach
+            // First store match data to ensure it's available after redirect
+            localStorage.setItem('activeMatchData', JSON.stringify(match));
+            // Use immediate redirect with window.location for most reliable navigation
+            window.location.href = '/match';
             break;
             
           case 'match_update':
@@ -2250,6 +2255,7 @@ export const MatchProvider = ({ children }: { children: ReactNode }) => {
     }
     
     try {
+
       const response = await apiRequest({
         url: '/api/matches/create',
         method: 'POST',
@@ -2260,13 +2266,58 @@ export const MatchProvider = ({ children }: { children: ReactNode }) => {
         },
       });
       const data = await response.json();
+
+      
+      // Get full match details immediately after creation
+      try {
+
+        const matchResponse = await apiRequest({
+          url: `/api/matches/${data.matchId}`,
+          method: 'GET'
+        });
+        const matchData = await matchResponse.json();
+
+        
+        // Store the match data and navigate immediately instead of waiting for WebSocket
+        if (matchData.match) {
+
+          setActiveMatch(matchData.match);
+          localStorage.setItem('activeMatchData', JSON.stringify(matchData.match));
+          
+          // Force navigation to match page
+          try {
+            window.location.href = '/match';
+            
+            // Add a fallback approach if the redirection doesn't happen immediately
+            setTimeout(() => {
+              const currentPath = window.location.pathname;
+              
+              if (currentPath !== '/match') {
+                window.location.replace('/match');
+                
+                // Another fallback for older browsers
+                setTimeout(() => {
+                  if (window.location.pathname !== '/match') {
+                    window.location = new URL('/match', window.location.origin) as any;
+                  }
+                }, 500);
+              }
+            }, 1000);
+          } catch (navError) {
+            console.error('Error navigating to match page:', navError);
+          }
+        }
+      } catch (fetchError) {
+        console.error('Failed to fetch match details:', fetchError);
+        // Even if fetch fails, return the invite code so the user isn't blocked
+      }
       
       return data.inviteCode;
     } catch (error) {
       console.error('Failed to create friend match:', error);
       throw error;
     }
-  }, [connected, address]);
+  }, [connected, address, setActiveMatch]);
 
   // Join an existing match by invite code
   const joinMatch = useCallback(async (inviteCode: string) => {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import Logo from "./Logo";
-import { useLocation, Link } from "wouter";
+import { useLocation, useRoute, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -11,8 +11,16 @@ import { useMatch } from "@/hooks/useMatch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
+// Define window with Phantom extension
+interface WindowWithSolana extends Window {
+  solana?: {
+    isPhantom?: boolean;
+    connect: () => Promise<any>;
+  };
+}
+
 // Define notification types
-type NotificationType = 'match_invite' | 'match_forfeit' | 'match_end' | 'leaderboard_update' | 'system';
+type NotificationType = 'match_invite' | 'match_forfeit' | 'match_end' | 'match_start' | 'leaderboard_update' | 'system';
 
 interface Notification {
   id: string;
@@ -26,6 +34,8 @@ interface Notification {
 
 export default function NavBar() {
   const [location, setLocation] = useLocation();
+  // Create a navigate function using setLocation for programmatic navigation
+  const router = { push: (path: string) => setLocation(path) };
   const { connected, userProfile, disconnect, address } = useWallet();
   const { toast } = useToast();
   const { activeMatch, matchEnded, matchSummary } = useMatch();
@@ -135,6 +145,12 @@ export default function NavBar() {
         if (!data || !data.type) return;
         
         // Handle different notification types
+        if (data.type === 'match_found') {
+          console.log('WebSocket: match_found event received', data);
+          // Note: The match_found event is now fully handled by MatchProvider in useMatch.tsx
+          // NavBar no longer handles this event to avoid navigation conflicts
+        }
+        
         if (data.type === 'match_invite' && data.invitee === address) {
           addNotification({
             type: 'match_invite',
@@ -252,8 +268,9 @@ export default function NavBar() {
   };
 
   return (
-    <header className="fixed top-0 z-50 w-full border-b border-[#00F0FF]/20 shadow-md" style={{ backgroundColor: "#0E0E10", height: "64px" }}>
-      <div className="container flex h-16 items-center px-8 max-w-screen-xl mx-auto">
+    <>
+      <header className="fixed top-0 left-0 right-0 z-50 py-4 px-4 md:px-6 flex justify-center" style={{backgroundColor: "#012619"}}>
+      <div className="md:bg-white md:rounded-full max-w-screen-xl w-full flex h-14 items-center px-6 md:px-10 md:shadow-md">
         <div className="flex w-full justify-between items-center">
           {/* Function to scroll to top of the page */}
           {(() => {
@@ -300,20 +317,20 @@ export default function NavBar() {
               onClick={handleHomeClick}
             >
               <Logo size={28} />
-              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#00F0FF] to-[#90D8E4]">LIQIFY</span>
+              <span className="text-xl font-bold text-[#00F0FF]">LIQIFY</span>
             </div>
             
             {/* Mobile Hamburger Menu */}
             <div className="md:hidden mr-2">
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-white hover:bg-[#00F0FF]/10">
-                    <i className="ri-menu-line text-xl"></i>
+                  <Button variant="ghost" size="icon" className="text-[#05d6a9] hover:bg-[#05d6a9]/10">
+                    <i className="ri-menu-line text-xl text-[#05d6a9]"></i>
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="bg-[#0E0E10] border-r border-[#00F0FF]/20 p-0 w-[280px]">
+                <SheetContent side="top" className="pt-12 backdrop-blur-sm border-b border-[#05d6a9]/20">
                   <div className="flex flex-col h-full">
-                    <div className="p-4 border-b border-[#00F0FF]/20">
+                    <div className="p-4 border-b border-[#05d6a9]/20">
                       <div 
                         className="flex items-center gap-2 cursor-pointer" 
                         onClick={() => {
@@ -322,34 +339,27 @@ export default function NavBar() {
                           // Use setTimeout to ensure navigation completes before scrolling
                           setTimeout(() => {
                             scrollToTop();
+                            return null; // Return null to satisfy TypeScript
                           }, 300);
                         }}
                       >
                         <Logo size={24} />
-                        <h3 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#00F0FF] to-[#90D8E4]">LIQIFY</h3>
+                        <h3 className="text-lg font-bold text-[#00F0FF]">LIQIFY</h3>
                       </div>
                     </div>
                     <ScrollArea className="flex-1 p-4">
-                      <nav className="flex flex-col space-y-4">
-                        <Link href="/" onClick={() => {
-                            setActiveSection(null);
-                            setMobileMenuOpen(false);
-                            scrollToTop();
-                          }}
-                        >
-                          <div className={`flex items-center p-2 rounded-md cursor-pointer ${location === '/' ? 'bg-[#00F0FF]/10 text-white' : 'text-text-secondary'}`}
-                          >
-                            <i className="ri-home-5-line text-xl mr-3"></i>
-                            <span className="font-medium">Home</span>
-                          </div>
+                      <div className="p-4 flex flex-col gap-4 text-black">
+                        <Link href="/" className={`flex items-center gap-2 py-2 px-4 rounded-lg transition-all ${location === '/' ? 'text-[#05d6a9] font-semibold border-b border-[#05d6a9]' : 'text-[#808080] hover:text-[#05d6a9]/80'}`} onClick={() => setMobileMenuOpen(false)}>
+                          <i className="ri-home-4-line"></i>
+                          <span>Home</span>
                         </Link>
                         <Link href="/match" onClick={() => {
                           setActiveSection(null);
                           setMobileMenuOpen(false);
                         }}>
-                          <div className={`flex items-center p-2 rounded-md ${location === '/match' ? 'bg-[#00F0FF]/10 text-white' : 'text-text-secondary'}`}>
-                            <i className="ri-sword-line text-xl mr-3"></i>
-                            <span className="font-medium">Play</span>
+                          <div className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 transition-colors">
+                            <i className="ri-sword-line"></i>
+                            <span>Play</span>
                           </div>
                         </Link>
                         <div 
@@ -359,7 +369,6 @@ export default function NavBar() {
                             setActiveSection('leaderboard');
                             // Close mobile menu
                             setMobileMenuOpen(false);
-                            
                             // Navigate to games page and scroll to leaderboard section
                             if (location !== '/games') {
                               setLocation('/games');
@@ -378,13 +387,14 @@ export default function NavBar() {
                               }
                             }
                           }}
-                          className={`flex items-center p-2 rounded-md cursor-pointer ${activeSection === 'leaderboard' ? 'bg-[#00F0FF]/10 text-white' : 'text-text-secondary'}`}
+                          className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 transition-colors"
                         >
-                          <i className="ri-bar-chart-line text-xl mr-3"></i>
-                          <span className="font-medium">Leaderboard</span>
+                          <i className="ri-bar-chart-line"></i>
+                          <span>Leaderboard</span>
                         </div>
                         <div 
                           onClick={(e) => {
+                            e.preventDefault();
                             // Set games as active section
                             setActiveSection('games');
                             // Navigate to games and scroll to top
@@ -396,17 +406,18 @@ export default function NavBar() {
                               scrollToTop();
                             }, 300);
                           }}
-                          className={`flex items-center p-2 rounded-md cursor-pointer ${location === '/games' ? 'bg-[#00F0FF]/10 text-white' : 'text-text-secondary'}`}
+                          className={`flex items-center gap-2 py-2 px-4 rounded-lg transition-all ${location === '/games' ? 'text-[#05d6a9] font-semibold border-b border-[#05d6a9]' : 'text-[#808080] hover:text-[#05d6a9]/80'}`}
                         >
-                          <i className="ri-gamepad-line text-xl mr-3"></i>
-                          <span className="font-medium">Games</span>
+                          <i className="ri-gamepad-line"></i>
+                          <span>Games</span>
                         </div>
                         <div 
                           onClick={(e) => {
                             e.preventDefault();
                             // Set leaderboard as active section
                             setActiveSection('leaderboard');
-                            
+                            // Close mobile menu
+                            setMobileMenuOpen(false);
                             // Navigate to games page and scroll to leaderboard section
                             if (location !== '/games') {
                               setLocation('/games');
@@ -424,21 +435,19 @@ export default function NavBar() {
                                 leaderboardSection.scrollIntoView({ behavior: 'smooth' });
                               }
                             }
-                            // Close mobile menu
-                            setMobileMenuOpen(false);
                           }}
-                          className={`flex items-center p-2 rounded-md cursor-pointer ${activeSection === 'leaderboard' ? 'bg-[#00F0FF]/10 text-white' : 'text-text-secondary'}`}
+                          className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 transition-colors"
                         >
-                          <i className="ri-bar-chart-line text-xl mr-3"></i>
-                          <span className="font-medium">Leaderboard</span>
+                          <i className="ri-bar-chart-line"></i>
+                          <span>Leaderboard</span>
                         </div>
                         <Link href="/watch" onClick={() => {
                           setActiveSection(null);
                           setMobileMenuOpen(false);
                         }}>
-                          <div className={`flex items-center p-2 rounded-md ${location === '/watch' ? 'bg-[#00F0FF]/10 text-white' : 'text-text-secondary'}`}>
-                            <i className="ri-tv-line text-xl mr-3"></i>
-                            <span className="font-medium">Watch</span>
+                          <div className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 transition-colors">
+                            <i className="ri-tv-line"></i>
+                            <span>Watch</span>
                           </div>
                         </Link>
                         <div 
@@ -458,10 +467,10 @@ export default function NavBar() {
                               });
                             }
                           }}
-                          className={`flex items-center p-2 rounded-md cursor-pointer ${location === '/profile' ? 'bg-[#00F0FF]/10 text-white' : 'text-text-secondary'}`}
+                          className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 transition-colors"
                         >
-                          <i className="ri-user-3-line text-xl mr-3"></i>
-                          <span className="font-medium">Profile</span>
+                          <i className="ri-user-3-line"></i>
+                          <span>Profile</span>
                         </div>
                         <div 
                           onClick={(e) => {
@@ -480,21 +489,21 @@ export default function NavBar() {
                               });
                             }
                           }}
-                          className={`flex items-center p-2 rounded-md cursor-pointer ${location === '/wallet' ? 'bg-[#00F0FF]/10 text-white' : 'text-text-secondary'}`}
+                          className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 transition-colors"
                         >
-                          <i className="ri-wallet-3-line text-xl mr-3"></i>
-                          <span className="font-medium">Wallet</span>
+                          <i className="ri-wallet-3-line"></i>
+                          <span>Wallet</span>
                         </div>
                         <Link href="/about" onClick={() => {
                           setActiveSection(null);
                           setMobileMenuOpen(false);
                         }}>
-                          <div className={`flex items-center p-2 rounded-md ${location === '/about' ? 'bg-[#00F0FF]/10 text-white' : 'text-text-secondary'}`}>
-                            <i className="ri-information-line text-xl mr-3"></i>
-                            <span className="font-medium">About</span>
+                          <div className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 transition-colors">
+                            <i className="ri-information-line"></i>
+                            <span>About</span>
                           </div>
                         </Link>
-                      </nav>
+                      </div>
                     </ScrollArea>
                     <div className="p-4 border-t border-[#00F0FF]/20">
                       {connected ? (
@@ -509,12 +518,9 @@ export default function NavBar() {
                           <i className="ri-logout-box-line mr-2"></i> Disconnect
                         </Button>
                       ) : (
-                        <Button 
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="w-full bg-accent-primary hover:bg-accent-primary/90 text-white"
-                        >
-                          Connect Wallet
-                        </Button>
+                        <div onClick={() => setMobileMenuOpen(false)} className="w-full">
+                          <WalletConnect />
+                        </div>
                       )}
                     </div>
                   </div>
@@ -535,7 +541,7 @@ export default function NavBar() {
               }}
               className="cursor-pointer"
             >
-              <span className={`text-base font-medium hover:text-white transition-colors ${location === '/' ? 'text-white' : 'text-text-secondary'}`}>
+              <span className={`text-base font-medium transition-all ${location === '/' ? 'text-[#05d6a9] font-semibold' : 'text-[#808080] hover:text-[#05d6a9]/80'}`}>
                 Home
               </span>
             </Link>
@@ -552,7 +558,7 @@ export default function NavBar() {
               }}
               className="cursor-pointer"
             >
-              <span className={`text-base font-medium hover:text-white transition-colors ${location === '/games' ? 'text-white' : 'text-text-secondary'}`}>
+              <span className={`text-base font-medium transition-all ${location === '/games' ? 'text-[#05d6a9] font-semibold' : 'text-[#808080] hover:text-[#05d6a9]/80'}`}>
                 Games
               </span>
             </a>
@@ -583,17 +589,17 @@ export default function NavBar() {
               }}
               className="cursor-pointer"
             >
-              <span className={`text-base font-medium hover:text-white transition-colors ${activeSection === 'leaderboard' ? 'text-white' : 'text-text-secondary'}`}>
+              <span className={`text-base font-medium transition-all ${activeSection === 'leaderboard' ? 'text-[#05d6a9] font-semibold' : 'text-[#808080] hover:text-[#05d6a9]/80'}`}>
                 Leaderboard
               </span>
             </a>
             <Link href="/watch" onClick={() => setActiveSection(null)}>
-              <span className={`text-base font-medium hover:text-white transition-colors ${location === '/watch' ? 'text-white' : 'text-text-secondary'}`}>
+              <span className={`text-base font-medium transition-all ${location === '/watch' ? 'text-[#05d6a9] font-semibold' : 'text-[#808080] hover:text-[#05d6a9]/80'}`}>
                 Watch
               </span>
             </Link>
             <Link href="/about" onClick={() => setActiveSection(null)}>
-              <span className={`text-base font-medium hover:text-white transition-colors ${location === '/about' ? 'text-white' : 'text-text-secondary'}`}>
+              <span className={`text-base font-medium transition-all ${location === '/about' ? 'text-[#05d6a9] font-semibold' : 'text-[#808080] hover:text-[#05d6a9]/80'}`}>
                 About
               </span>
             </Link>
@@ -602,9 +608,7 @@ export default function NavBar() {
           {/* Right Section - Connect Wallet Button or Profile */}
           <div className="flex items-center gap-5">
             {!connected ? (
-              <Button className="bg-accent-primary hover:bg-accent-primary/90 text-white rounded-md py-2 px-6 h-10 font-medium">
-                Connect Wallet
-              </Button>
+              <WalletConnect />
             ) : (
               <>
                 {/* Notifications */}
@@ -612,13 +616,13 @@ export default function NavBar() {
                   <DropdownMenu open={notificationsOpen} onOpenChange={setNotificationsOpen}>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="relative">
-                        <i className="ri-notification-3-line text-xl"></i>
+                        <i className="ri-notification-3-line text-xl md:text-[#333333] text-white"></i>
                         {hasUnread && (
-                          <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-accent-primary"></span>
+                          <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-[#05d6a9]"></span>
                         )}
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-80 text-white rounded-md shadow-lg bg-[#0E0E10] border border-[#00F0FF]/20">
+                    <DropdownMenuContent align="end" className="w-80 text-black rounded-md shadow-lg bg-white border border-[#05d6a9]/20">
                       <div className="py-2 px-4 border-b border-neutral/20">
                         <h3 className="font-medium">Notifications</h3>
                       </div>
@@ -666,7 +670,7 @@ export default function NavBar() {
                         </ScrollArea>
                       ) : (
                         <div className="p-4 text-center">
-                          <p className="text-text-secondary">No notifications</p>
+                          <p className="text-black">No notifications</p>
                         </div>
                       )}
                       
@@ -693,19 +697,19 @@ export default function NavBar() {
                       <AvatarFallback>{userProfile?.username?.slice(0, 2) || "JD"}</AvatarFallback>
                     </Avatar>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="text-white rounded-md shadow-lg bg-[#0E0E10] border border-[#00F0FF]/20">
+                  <DropdownMenuContent align="end" className="text-white rounded-md shadow-lg bg-[#012619] border border-[#05d6a9]/20">
                     <Link href="/profile">
-                      <DropdownMenuItem className="cursor-pointer text-white hover:bg-[#00F0FF]/10 py-3 transition-colors duration-200">
+                      <DropdownMenuItem className="cursor-pointer text-white hover:bg-[#05d6a9]/40 py-3 transition-colors duration-200">
                         <i className="ri-user-3-line mr-2"></i> Profile
                       </DropdownMenuItem>
                     </Link>
                     <Link href="/wallet">
-                      <DropdownMenuItem className="cursor-pointer text-white hover:bg-[#00F0FF]/10 py-3 transition-colors duration-200">
+                      <DropdownMenuItem className="cursor-pointer text-white hover:bg-[#05d6a9]/40 py-3 transition-colors duration-200">
                         <i className="ri-wallet-3-line mr-2"></i> Wallet
                       </DropdownMenuItem>
                     </Link>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleDisconnect} className="cursor-pointer text-white hover:bg-[#00F0FF]/10 py-3 transition-colors duration-200">
+                    <DropdownMenuItem onClick={handleDisconnect} className="cursor-pointer text-white hover:bg-[#05d6a9]/40 py-3 transition-colors duration-200">
                       <i className="ri-logout-box-line mr-2"></i> Disconnect
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -716,5 +720,6 @@ export default function NavBar() {
         </div>
       </div>
     </header>
+    </>
   );
 }

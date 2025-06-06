@@ -1,9 +1,15 @@
+// Define window with Phantom extension
+interface WindowWithSolana extends Window {
+  solana?: PhantomProvider;
+}
+
 // Interface for Phantom wallet
 interface PhantomProvider {
   isPhantom?: boolean;
   connect: ({ onlyIfTrusted }: { onlyIfTrusted?: boolean }) => Promise<{ publicKey: { toString: () => string } }>;
   disconnect: () => Promise<void>;
   on: (event: string, callback: (args: any) => void) => void;
+  off: (event: string, callback: (args: any) => void) => void;
   isConnected: boolean;
   signMessage: (message: Uint8Array) => Promise<{ signature: Uint8Array }>;
   signTransaction: (transaction: any) => Promise<any>;
@@ -12,13 +18,19 @@ interface PhantomProvider {
 
 // Get the Phantom provider from window
 const getProvider = (): PhantomProvider | null => {
-  if (typeof window !== "undefined" && "solana" in window) {
-    const provider = (window as any).solana;
-    if (provider.isPhantom) {
-      return provider;
+  try {
+    if (typeof window === "undefined") return null;
+    
+    const solanaWindow = window as WindowWithSolana;
+    
+    if (solanaWindow.solana?.isPhantom) {
+      return solanaWindow.solana;
     }
+    return null;
+  } catch (error) {
+    console.error("Error getting Phantom provider:", error);
+    return null;
   }
-  return null;
 };
 
 // Wallet Adapter Class
@@ -34,9 +46,12 @@ export class WalletAdapter {
   }
 
   connect = async (): Promise<string | null> => {
+    // Re-check the provider in case it was initialized after page load
+    this.provider = getProvider();
+    
     if (!this.provider) {
       console.error("Phantom wallet not found");
-      throw new Error("Phantom wallet not found");
+      throw new Error("Phantom wallet not installed or detected. Please install Phantom wallet extension.");
     }
 
     try {
@@ -44,9 +59,14 @@ export class WalletAdapter {
       this.address = response.publicKey.toString();
       this.connected = true;
       return this.address;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error connecting to wallet:", error);
-      throw error;
+      // Provide more descriptive error messages
+      if (error.message?.includes("User rejected")) {
+        throw new Error("Connection rejected by user");
+      } else {
+        throw new Error(error.message || "Failed to connect to Phantom wallet");
+      }
     }
   };
 
@@ -57,24 +77,28 @@ export class WalletAdapter {
       await this.provider.disconnect();
       this.address = null;
       this.connected = false;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error disconnecting from wallet:", error);
-      throw error;
+      throw new Error(error.message || "Failed to disconnect wallet");
     }
   };
 
   signMessage = async (message: string): Promise<Uint8Array> => {
     if (!this.provider || !this.address) {
-      throw new Error("Wallet not connected");
+      throw new Error("Wallet not connected. Please connect your wallet first.");
     }
 
     try {
       const encodedMessage = new TextEncoder().encode(message);
       const signedMessage = await this.provider.signMessage(encodedMessage);
       return signedMessage.signature;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error signing message:", error);
-      throw error;
+      if (error.message?.includes("User rejected")) {
+        throw new Error("Message signing rejected by user");
+      } else {
+        throw new Error(error.message || "Failed to sign message");
+      }
     }
   };
 

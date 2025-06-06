@@ -244,11 +244,40 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export default function Match() {
+  console.log('MATCH PAGE: Component function executed');
+  
   // 1. First, define all state hooks
   const [, setLocation] = useLocation();
   const { activeMatch, matchEnded, resetMatch, setActiveMatch } = useMatch();
   const { connected, address } = useWallet();
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Add debug logging for component mount and immediately check localStorage
+  useEffect(() => {
+    console.log('MATCH PAGE: Component mounted'); 
+    console.log('MATCH PAGE: Current URL:', window.location.href);
+    console.log('MATCH PAGE: Initial state - connected:', connected, 'address:', address);
+    
+    // Immediately check localStorage for match data on component mount
+    // This ensures we display the match even if the API request hasn't completed yet
+    try {
+      const storedMatchData = localStorage.getItem('activeMatchData');
+      if (storedMatchData && !activeMatch) {
+        console.log('MATCH PAGE: Found match data in localStorage, loading immediately');
+        const matchData = JSON.parse(storedMatchData);
+        setActiveMatch(matchData);
+        setIsLoading(false); // Immediately stop loading state since we have data
+      } else {
+        console.log('MATCH PAGE: No match data in localStorage or match already loaded');
+      }
+    } catch (error) {
+      console.error('Error parsing localStorage match data:', error);
+    }
+    
+    return () => {
+      console.log('MATCH PAGE: Component unmounted');
+    };
+  }, []);
   const [forcedMatch, setForcedMatch] = useState(null);
   const [debugInfo, setDebugInfo] = useState('');
   
@@ -288,8 +317,12 @@ export default function Match() {
     
     const fetchActiveMatches = async () => {
       try {
+        console.log('MATCH PAGE: fetchActiveMatches called');
+        console.log('MATCH PAGE: initialLoadComplete =', initialLoadComplete);
+        console.log('MATCH PAGE: existing activeMatch =', activeMatch ? activeMatch.id : 'none');
+        
         setIsLoading(true);
-        console.log('Fetching active matches for address:', address);
+        console.log('MATCH PAGE: Fetching active matches for address:', address);
         
         // Try to get match data from API
         const apiUrl = `${window.location.protocol}//${window.location.host}/api/matches/active?address=${address}`;

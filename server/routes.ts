@@ -3662,6 +3662,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         duration: duration ? parseInt(duration) : 1800, // Use provided duration or default to 30 minutes
         isGroupMatch: false
       });
+
+      // Get full match data with player information
+      const fullMatch = await storage.getMatch(match.id);
+      if (fullMatch) {
+        // Format match data for client
+        const player = await storage.getUser(user.id);
+        
+        if (player) {
+          // Create match data object for WebSocket
+          const matchData = {
+            id: match.id,
+            status: match.status,
+            market: match.market,
+            duration: match.duration,
+            createdAt: match.createdAt,
+            isGroupMatch: match.isGroupMatch,
+            player: {
+              id: player.id,
+              username: player.username,
+              walletAddress: player.walletAddress,
+              avatarUrl: player.avatarUrl || null
+            },
+            opponent: null, // No opponent yet
+            spectators: []
+          };
+          
+          // Send match_found event to creator
+          broadcastToUser(user.id, {
+            type: 'match_found',
+            match: matchData
+          });
+        }
+      }
       
       res.json({ matchId: match.id, inviteCode });
     } catch (error) {
@@ -3797,28 +3830,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post('/api/matches/:matchId/join', async (req: Request, res: Response) => {
     try {
+      console.log(`[SERVER] Match join request received for matchId: ${req.params.matchId}`);
       const { matchId } = req.params;
       const { address } = walletAddressSchema.parse(req.body);
+      console.log(`[SERVER] Player joining with address: ${address}`);
       
       const user = await storage.getUserByWalletAddress(address);
       if (!user) {
+        console.log(`[SERVER] ERROR: User not found with address ${address}`);
         return res.status(404).json({ message: "User not found" });
       }
+      console.log(`[SERVER] Found user: ${user.username} (ID: ${user.id})`);
       
       const match = await storage.getMatch(parseInt(matchId));
       if (!match) {
+        console.log(`[SERVER] ERROR: Match not found with ID ${matchId}`);
         return res.status(404).json({ message: "Match not found" });
       }
+      console.log(`[SERVER] Found match: ${match.id}, status: ${match.status}, inviteCode: ${match.matchCode}`);
       
       if (match.status !== 'pending') {
+        console.log(`[SERVER] ERROR: Match ${match.id} is not pending, current status: ${match.status}`);
         return res.status(400).json({ message: "This match is no longer available" });
       }
       
       if (match.player1Id === user.id) {
+        console.log(`[SERVER] ERROR: User ${user.id} tried to join their own match ${match.id}`);
         return res.status(400).json({ message: "You cannot join your own match" });
       }
       
       // Update match status
+      console.log(`[SERVER] Updating match ${match.id} status to 'active' with player2Id: ${user.id}`);
       const updatedMatch = await storage.updateMatch(match.id, {
         player2Id: user.id,
         status: 'active',
@@ -3826,7 +3868,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       if (updatedMatch) {
+        console.log(`[SERVER] Successfully updated match: ${JSON.stringify(updatedMatch)}`);
+        
         // Create activity for match start
+        console.log(`[SERVER] Creating match_started activity for match ${match.id}`);
         await storage.createActivity({
           matchId: match.id,
           userId: null,
@@ -3840,6 +3885,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Find opponent
         const opponent = await storage.getUser(match.player1Id);
+        console.log(`[SERVER] Found opponent: ${opponent?.username || 'Unknown'} (ID: ${match.player1Id})`);
         
         // Notify both players
         const matchData = {
@@ -3858,13 +3904,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           spectators: []
         };
         
-        // Notify player 2
+        console.log(`[SERVER] Prepared match data for WebSocket: ${JSON.stringify(matchData)}`);
+        
+        // Notify player 2 (the invitee/joiner)
+        console.log(`[SERVER] Broadcasting match_found event to player 2 (joiner): ${user.id}`);
         broadcastToUser(user.id, {
           type: 'match_found',
           match: matchData
         });
         
-        // Notify player 1 (swap player/opponent)
+        // Notify player 1 (the inviter/host)
+        console.log(`[SERVER] Broadcasting match_found event to player 1 (host): ${match.player1Id}`);
         broadcastToUser(match.player1Id, {
           type: 'match_found',
           match: {
@@ -3873,8 +3923,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             opponent: matchData.player
           }
         });
+        
+        console.log(`[SERVER] Both players notified about match ${match.id} via WebSocket`);
+      } else {
+        console.log(`[SERVER] WARNING: Failed to update match ${match.id}`);
       }
       
+      console.log(`[SERVER] Match join successful: User ${user.id} joined match ${match.id}`);
       res.json({ status: 'joined', matchId: match.id });
     } catch (error) {
       if (error instanceof z.ZodError) {

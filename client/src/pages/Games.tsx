@@ -10,6 +10,84 @@ import GameItem from "@/components/GameItem";
 import PostMatchSummary from "@/components/PostMatchSummary";
 import { useWallet } from "@/hooks/useWallet";
 import { useMatch } from "@/hooks/useMatch";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+
+// Join with Code component for joining games with a unique code
+function JoinWithCode() {
+  const [gameCode, setGameCode] = useState('');
+  const [isJoining, setIsJoining] = useState(false);
+  const { toast } = useToast();
+  
+  const handleJoinGame = () => {
+    if (!gameCode.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please enter a valid game code"
+      });
+      return;
+    }
+    
+    setIsJoining(true);
+    
+    // Simulate API call to join game
+    setTimeout(() => {
+      // This would be replaced with an actual API call in production
+      const successfulJoin = Math.random() > 0.3; // 70% chance of success for demo purposes
+      
+      if (successfulJoin) {
+        toast({
+          title: "Success!",
+          description: "Successfully joined game!",
+          className: "bg-[#05d6a9]/20 border-[#05d6a9] text-white"
+        });
+        // In a real app, this would redirect to the game
+        // window.location.href = `/match?code=${gameCode}`;
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Invalid game code or game no longer available"
+        });
+      }
+      
+      setIsJoining(false);
+      setGameCode('');
+    }, 1500);
+  };
+  
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-[#F2F2F2]/80">
+        Have a game code? Enter it below to join an existing game.
+      </p>
+      
+      <div className="flex gap-3 flex-col sm:flex-row">
+        <Input
+          type="text"
+          placeholder="Enter game code"
+          value={gameCode}
+          onChange={(e) => setGameCode(e.target.value)}
+          className="flex-grow bg-[#0E0E10]/70 border-[#05d6a9]/30 focus:border-[#05d6a9] text-[#F2F2F2] placeholder:text-[#F2F2F2]/50"
+        />
+        <Button 
+          onClick={handleJoinGame}
+          disabled={isJoining || !gameCode.trim()}
+          className="bg-[#05d6a9] hover:bg-[#05d6a9]/80 text-black font-medium transition-all duration-200"
+        >
+          {isJoining ? (
+            <>
+              <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></span>
+              Joining...
+            </>
+          ) : 'Join Game'}
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export default function Games() {
   const { connected } = useWallet();
@@ -54,6 +132,26 @@ export default function Games() {
             <div className="md:col-span-1">
               <div className="backdrop-blur-md bg-[#0E0E10]/40 rounded-xl border border-[#00F0FF]/20 shadow-[0_0_15px_rgba(0,240,255,0.15)] overflow-hidden relative p-1">
                 <CreateGamePanel />
+              </div>
+              
+              {/* Join with Code Section */}
+              <div className="mt-4 backdrop-blur-md bg-[#0E0E10]/40 rounded-xl border border-[#05d6a9]/30 p-6 shadow-[0_0_20px_rgba(5,214,169,0.15)] overflow-hidden relative">
+                {/* Animated corner effect */}
+                <div className="absolute bottom-0 right-0 w-20 h-20">
+                  <div className="absolute bottom-0 right-0 w-[2px] h-12 bg-[#05d6a9] animate-pulse shadow-[0_0_8px_rgba(5,214,169,0.8)]">
+                    <div className="absolute -left-[1px] top-0 w-[4px] h-[4px] rounded-full bg-[#05d6a9] shadow-[0_0_5px_rgba(5,214,169,1)]"></div>
+                  </div>
+                  <div className="absolute bottom-0 right-0 w-12 h-[2px] bg-[#05d6a9] animate-pulse shadow-[0_0_8px_rgba(5,214,169,0.8)]">
+                    <div className="absolute -top-[1px] left-0 w-[4px] h-[4px] rounded-full bg-[#05d6a9] shadow-[0_0_5px_rgba(5,214,169,1)]"></div>
+                  </div>
+                </div>
+                
+                <h2 className="text-xl font-bold mb-4 relative inline-block">
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#05d6a9] to-[#04eac2]">JOIN WITH CODE</span>
+                  <div className="absolute -bottom-2 left-0 w-full h-[1px] bg-gradient-to-r from-[#05d6a9] to-transparent"></div>
+                </h2>
+                
+                <JoinWithCode />
               </div>
               
               {/* Games Section */}
