@@ -1,519 +1,394 @@
-// import { useEffect } from "react";
-// import { useLocation } from "wouter";
-// import MatchDashboard from "@/components/MatchDashboard";
-// import { useMatch } from "@/hooks/useMatch";
-// import { useWallet } from "@/hooks/useWallet";
-// import { Button } from "@/components/ui/button";
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-// export default function Match() {
-//   const [, setLocation] = useLocation();
-//   const { activeMatch, matchEnded } = useMatch();
-//   const { connected } = useWallet();
-
-//   useEffect(() => {
-//     if (matchEnded) {
-//       // Redirect to home to show post-match summary
-//       setLocation("/");
-//     }
-//   }, [matchEnded, setLocation]);
-
-//   if (!connected) {
-//     return (
-//       <div className="container mx-auto px-4 py-8 max-w-md">
-//         <Card className="gradient-card">
-//           <CardHeader>
-//             <CardTitle>Connect Wallet</CardTitle>
-//           </CardHeader>
-//           <CardContent>
-//             <p className="text-text-secondary mb-4">
-//               Please connect your wallet to participate in matches.
-//             </p>
-//             <Button 
-//               className="w-full"
-//               onClick={() => setLocation("/")}
-//             >
-//               Go Home
-//             </Button>
-//           </CardContent>
-//         </Card>
-//       </div>
-//     );
-//   }
-
-//   if (!activeMatch) {
-//     return (
-//       <div className="container mx-auto px-4 py-8 max-w-md">
-//         <Card className="gradient-card">
-//           <CardHeader>
-//             <CardTitle>No Active Match</CardTitle>
-//           </CardHeader>
-//           <CardContent>
-//             <p className="text-text-secondary mb-4">
-//               You are not currently in a match. Join a queue to start playing!
-//             </p>
-//             <Button 
-//               className="w-full"
-//               onClick={() => setLocation("/")}
-//             >
-//               Find a Match
-//             </Button>
-//           </CardContent>
-//         </Card>
-//       </div>
-//     );
-//   }
-
-//   return <MatchDashboard />;
-// }
-
-// import { useEffect, useState } from "react";
-// import { useLocation } from "wouter";
-// import MatchDashboard from "@/components/MatchDashboard";
-// import { useMatch } from "@/hooks/useMatch";
-// import { useWallet } from "@/hooks/useWallet";
-// import { Button } from "@/components/ui/button";
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-// export default function Match() {
-//   const [, setLocation] = useLocation();
-//   const { activeMatch, matchEnded, resetMatch } = useMatch();
-//   const { connected, address } = useWallet();
-//   const [isLoading, setIsLoading] = useState(true);
-//   const [forcedMatch, setForcedMatch] = useState(null);
-  
-//   // Attempt to fetch active matches for this user
-//   useEffect(() => {
-//     if (!connected || !address) return;
-    
-//     const fetchActiveMatches = async () => {
-//       try {
-//         setIsLoading(true);
-//         console.log('Fetching active matches for address:', address);
-        
-//         // Try to get match data from API
-//         const response = await fetch('/api/matches/active?address=' + address);
-//         const data = await response.json();
-        
-//         console.log('Active matches response:', data);
-        
-//         if (data && data.match) {
-//           console.log('Active match found via API:', data.match);
-//           setForcedMatch(data.match);
-          
-//           // Save to localStorage as backup
-//           localStorage.setItem('activeMatchData', JSON.stringify(data.match));
-//         } else {
-//           // If no active match found via API, try localStorage as fallback
-//           const storedMatchData = localStorage.getItem('activeMatchData');
-//           if (!activeMatch && storedMatchData) {
-//             try {
-//               console.log('Using backup match data from localStorage');
-//               const matchData = JSON.parse(storedMatchData);
-//               setForcedMatch(matchData);
-//             } catch (error) {
-//               console.error('Failed to parse stored match data:', error);
-//               localStorage.removeItem('activeMatchData');
-//             }
-//           }
-//         }
-//       } catch (error) {
-//         console.error('Error fetching active matches:', error);
-//       } finally {
-//         setIsLoading(false);
-//       }
-//     };
-    
-//     fetchActiveMatches();
-//   }, [connected, address, activeMatch]);
-
-//   useEffect(() => {
-//     if (matchEnded) {
-//       // Redirect to home to show post-match summary
-//       setLocation("/");
-//       // Clear stored match data when match ends
-//       localStorage.removeItem('activeMatchData');
-//     }
-//   }, [matchEnded, setLocation]);
-  
-//   // Store match data in localStorage when it's available
-//   useEffect(() => {
-//     if (activeMatch) {
-//       console.log('Storing active match data in localStorage');
-//       localStorage.setItem('activeMatchData', JSON.stringify(activeMatch));
-//     }
-//   }, [activeMatch]);
-
-//   if (!connected) {
-//     return (
-//       <div className="container mx-auto px-4 py-8 max-w-md">
-//         <Card className="gradient-card">
-//           <CardHeader>
-//             <CardTitle>Connect Wallet</CardTitle>
-//           </CardHeader>
-//           <CardContent>
-//             <p className="text-text-secondary mb-4">
-//               Please connect your wallet to participate in matches.
-//             </p>
-//             <Button 
-//               className="w-full"
-//               onClick={() => setLocation("/")}
-//             >
-//               Go Home
-//             </Button>
-//           </CardContent>
-//         </Card>
-//       </div>
-//     );
-//   }
-
-//   if (isLoading) {
-//     return (
-//       <div className="container mx-auto px-4 py-8 max-w-md">
-//         <Card className="gradient-card">
-//           <CardHeader>
-//             <CardTitle>Loading Match</CardTitle>
-//           </CardHeader>
-//           <CardContent className="text-center">
-//             <div className="flex items-center justify-center space-x-2 py-4">
-//               <div className="h-4 w-4 rounded-full bg-accent-primary animate-pulse"></div>
-//               <div className="h-4 w-4 rounded-full bg-accent-primary animate-pulse delay-150"></div>
-//               <div className="h-4 w-4 rounded-full bg-accent-primary animate-pulse delay-300"></div>
-//             </div>
-//             <p className="text-text-secondary mb-4">
-//               Loading your match data...
-//             </p>
-//           </CardContent>
-//         </Card>
-//       </div>
-//     );
-//   }
-  
-//   if (!activeMatch && !forcedMatch) {
-//     return (
-//       <div className="container mx-auto px-4 py-8 max-w-md">
-//         <Card className="gradient-card">
-//           <CardHeader>
-//             <CardTitle>No Active Match</CardTitle>
-//           </CardHeader>
-//           <CardContent>
-//             <p className="text-text-secondary mb-4">
-//               You are not currently in a match. Join a queue to start playing!
-//             </p>
-//             <Button 
-//               className="w-full"
-//               onClick={() => setLocation("/")}
-//             >
-//               Find a Match
-//             </Button>
-//           </CardContent>
-//         </Card>
-//       </div>
-//     );
-//   }
-
-//   // Use either the system activeMatch or our forced match
-//   // Pass the active match through context - the MatchDashboard component 
-//   // already reads from the useMatch hook, so we don't need to pass props
-//   return <MatchDashboard />;
-// }
-
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useRoute } from "wouter";
 import MatchDashboard from "@/components/MatchDashboard";
 import { useMatch } from "@/hooks/useMatch";
 import { useWallet } from "@/hooks/useWallet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// Add Node type reference
+type TimeoutRef = ReturnType<typeof setTimeout>;
 
-// Debounce function for localStorage operations
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+// Interface for match data structure
+interface MatchData {
+  id: string;
+  status: string;
+  players?: {address: string}[];
+  [key: string]: any; // For other properties
+}
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
+// Interface for WebSocket message data
+interface WebSocketMessageData {
+  type: string;
+  match?: MatchData;
+  reason?: string;
+  [key: string]: any;
 }
 
 export default function Match() {
-  console.log('MATCH PAGE: Component function executed');
+  console.log('MATCH PAGE: Component rendered');
   
-  // 1. First, define all state hooks
+  // Core state and hooks
   const [, setLocation] = useLocation();
-  const { activeMatch, matchEnded, resetMatch, setActiveMatch } = useMatch();
-  const { connected, address } = useWallet();
+  const [matched, params] = useRoute<{matchId: string}>('/match/:matchId');
+  const { activeMatch, matchEnded, resetMatch, setActiveMatch }: any = useMatch();
+  const { connected, address }: any = useWallet();
+  const [forcedMatch, setForcedMatch] = useState<MatchData | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Add debug logging for component mount and immediately check localStorage
-  useEffect(() => {
-    console.log('MATCH PAGE: Component mounted'); 
-    console.log('MATCH PAGE: Current URL:', window.location.href);
-    console.log('MATCH PAGE: Initial state - connected:', connected, 'address:', address);
-    
-    // Immediately check localStorage for match data on component mount
-    // This ensures we display the match even if the API request hasn't completed yet
-    try {
-      const storedMatchData = localStorage.getItem('activeMatchData');
-      if (storedMatchData && !activeMatch) {
-        console.log('MATCH PAGE: Found match data in localStorage, loading immediately');
-        const matchData = JSON.parse(storedMatchData);
-        setActiveMatch(matchData);
-        setIsLoading(false); // Immediately stop loading state since we have data
-      } else {
-        console.log('MATCH PAGE: No match data in localStorage or match already loaded');
-      }
-    } catch (error) {
-      console.error('Error parsing localStorage match data:', error);
-    }
-    
-    return () => {
-      console.log('MATCH PAGE: Component unmounted');
-    };
-  }, []);
-  const [forcedMatch, setForcedMatch] = useState(null);
-  const [debugInfo, setDebugInfo] = useState('');
-  
-  // 2. Define all useEffect hooks (unconditionally)
-  // Effect for logging and handling forcedMatch
-  useEffect(() => {
-    // Log current match state for debugging
-    console.log('Current match state:', { activeMatch, forcedMatch });
-    setDebugInfo(JSON.stringify({ activeMatch, forcedMatch }, null, 2));
-    
-    // If we have a forcedMatch but no activeMatch in the context, use it as a last resort
-    if (forcedMatch && !activeMatch) {
-      console.log('Using forcedMatch as activeMatch:', forcedMatch);
-      setActiveMatch(forcedMatch);
-    }
-  }, [forcedMatch, activeMatch, setActiveMatch]);
-  
-  // Track if we've already loaded match data to prevent redundant API calls
+  const wsRef = useRef<WebSocket | null>(null);
+  const pollIntervalRef = useRef<TimeoutRef | null>(null);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  const previousAddress = useRef<string | null>(null);
-  
-  // Effect for fetching active matches - only runs once on mount and when address changes
-  useEffect(() => {
-    // Skip API calls if not connected
-    if (!connected || !address) {
-      setIsLoading(false);
-      return;
-    }
+
+  // Debug info
+  console.log('MATCH PAGE: URL matched =', matched, 'params =', params);
+  console.log('MATCH PAGE: Active match from context =', activeMatch);
+
+  // Helper function to get the API base URL
+  const getApiBaseUrl = () => {
+    return `${window.location.protocol}//${window.location.host}/api`;
+  };
+
+  // Fetch match by ID from the URL parameter
+  const fetchMatchById = async (matchId: string): Promise<MatchData | null> => {
+    console.log('MATCH PAGE: Fetching match by ID:', matchId);
+    setIsLoading(true);
     
-    // Only refetch if address changed or we haven't loaded yet
-    const addressChanged = previousAddress.current !== address;
-    if (initialLoadComplete && !addressChanged && activeMatch) {
-      return;
-    }
+    // Create a minimal match object with the ID to set immediately
+    // This ensures we always have a match object to render
+    const minimalMatch: MatchData = {
+      id: matchId,
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
     
-    previousAddress.current = address;
+    // Set this immediately so we don't show 'No Active Match'
+    console.log('MATCH PAGE: Setting minimal match data while fetching');
+    setForcedMatch(minimalMatch);
+    setActiveMatch(minimalMatch);
+    localStorage.setItem('activeMatchData', JSON.stringify(minimalMatch));
     
-    const fetchActiveMatches = async () => {
-      try {
-        console.log('MATCH PAGE: fetchActiveMatches called');
-        console.log('MATCH PAGE: initialLoadComplete =', initialLoadComplete);
-        console.log('MATCH PAGE: existing activeMatch =', activeMatch ? activeMatch.id : 'none');
-        
-        setIsLoading(true);
-        console.log('MATCH PAGE: Fetching active matches for address:', address);
-        
-        // Try to get match data from API
-        const apiUrl = `${window.location.protocol}//${window.location.host}/api/matches/active?address=${address}`;
-        console.log('Fetching from URL:', apiUrl);
-        const response = await fetch(apiUrl);
-        
-        if (!response.ok) {
-          throw new Error(`API request failed with status ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log('Active matches response:', data);
+    try {
+      const apiUrl = `${getApiBaseUrl()}/matches/${matchId}`;
+      console.log('MATCH PAGE: API URL =', apiUrl);
+      
+      const response = await fetch(apiUrl);
+      if (response.ok) {
+        // Fixed TypeScript error here - added type assertion
+        const data = await response.json() as { match?: MatchData };
+        console.log('MATCH PAGE: Match data received:', data);
         
         if (data && data.match) {
-          console.log('Active match found via API:', data.match);
+          console.log('MATCH PAGE: Match found, setting active match');
           setActiveMatch(data.match);
-          // Use a more efficient localStorage write (moved to a separate effect with debouncing)
+          localStorage.setItem('activeMatchData', JSON.stringify(data.match));
+          return data.match; // Return the match data from the API
         } else {
-          // If no active match found via API, try localStorage as fallback
-          // But only if we don't already have a match loaded
-          if (!activeMatch) {
-            const storedMatchData = localStorage.getItem('activeMatchData');
-            if (storedMatchData) {
-              try {
-                console.log('Using backup match data from localStorage');
-                const matchData = JSON.parse(storedMatchData);
-                setActiveMatch(matchData);
-              } catch (error) {
-                console.error('Failed to parse stored match data:', error);
-                localStorage.removeItem('activeMatchData');
-              }
+          console.log('MATCH PAGE: No match found with ID:', matchId);
+          // Keep using our minimal match instead of showing No Active Match
+          return minimalMatch; // Return the minimal match we created
+        }
+      } else {
+        console.error('MATCH PAGE: API error:', response.status);
+        return minimalMatch; // Return minimal match on API error
+      }
+    } catch (error: unknown) {
+      console.error('MATCH PAGE: Error fetching match:', error);
+      return minimalMatch; // Return minimal match on error
+    } finally {
+      setIsLoading(false);
+      setInitialLoadComplete(true);
+    }
+  };
+
+  // Fetch active match for the current user
+  const fetchActiveMatch = async (): Promise<void> => {
+    console.log('MATCH PAGE: Fetching active match for address:', address);
+    setIsLoading(true);
+    
+    try {
+      const apiUrl = `${getApiBaseUrl()}/matches/active?address=${address}`;
+      console.log('MATCH PAGE: API URL =', apiUrl);
+      
+      const response = await fetch(apiUrl);
+      if (response.ok) {
+        // Fixed TypeScript error here - added type assertion
+        const data = await response.json() as { match?: MatchData };
+        console.log('MATCH PAGE: Match data received:', data);
+        
+        if (data && data.match) {
+          console.log('MATCH PAGE: Active match found, setting active match');
+          setActiveMatch(data.match);
+          localStorage.setItem('activeMatchData', JSON.stringify(data.match));
+        } else {
+          console.log('MATCH PAGE: No active match found for address');
+          // Try localStorage as fallback
+          const storedMatchData = localStorage.getItem('activeMatchData');
+          if (storedMatchData) {
+            try {
+              const matchData = JSON.parse(storedMatchData) as MatchData;
+              console.log('MATCH PAGE: Using stored match data:', matchData);
+              setActiveMatch(matchData);
+            } catch (error: unknown) {
+              console.error('MATCH PAGE: Failed to parse stored match data');
+              localStorage.removeItem('activeMatchData');
             }
           }
         }
-        
-        // Mark initial load as complete
-        setInitialLoadComplete(true);
-      } catch (error) {
-        console.error('Error fetching active matches:', error);
-      } finally {
-        setIsLoading(false);
+      } else {
+        console.error('MATCH PAGE: API error:', response.status);
       }
-    };
-    
-    fetchActiveMatches();
-  }, [connected, address, setActiveMatch, initialLoadComplete, activeMatch]);
-
-  // Effect for handling match end
-  useEffect(() => {
-    if (matchEnded) {
-      console.log('Match ended detected, redirecting to home...');
-      // Redirect to home to show post-match summary
-      setLocation("/");
-      // Clear stored match data when match ends
-      localStorage.removeItem('activeMatchData');
-      // Also reset match state
-      resetMatch();
+    } catch (error: unknown) {
+      console.error('MATCH PAGE: Error fetching active match:', error);
+    } finally {
+      setIsLoading(false);
+      setInitialLoadComplete(true);
     }
-  }, [matchEnded, setLocation, resetMatch]);
-  
-  // CRITICAL: Combined WebSocket + Basic polling approach for match forfeit detection
-  // This is more reliable than either approach alone
-  useEffect(() => {
-    if (!activeMatch || !connected || !address) return;
+  };
+
+  // Setup WebSocket connection
+  const setupWebSocket = (): (() => void) | undefined => {
+    if (wsRef.current) return; // Already set up
     
-    console.log('Match monitoring activated for ID:', activeMatch.id);
-    let forceRedirectTriggered = false;
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    console.log('MATCH PAGE: Setting up WebSocket at', wsUrl);
     
-    // Function to perform redirection (used by both WebSocket and polling)
-    const performMatchEndRedirection = (reason = 'unknown') => {
-      // Prevent duplicate redirects
-      if (forceRedirectTriggered) return;
-      forceRedirectTriggered = true;
-      
-      console.log(`Match end detected (${reason}). Performing cleanup and redirect...`);
-      
-      // Send a notification using the global notification system
-      if (typeof window !== 'undefined' && (window as any).cryptoArenaNotifications) {
-        // Determine notification type based on the reason
-        if (reason.includes('forfeit') || reason.includes('websocket')) {
-          (window as any).cryptoArenaNotifications.addNotification({
-            type: 'match_forfeit',
-            title: 'Match Forfeited',
-            message: 'Your opponent has forfeited the match.',
-            actionUrl: '/'
-          });
-        } else {
-          (window as any).cryptoArenaNotifications.addNotification({
-            type: 'match_end',
-            title: 'Match Ended',
-            message: 'Your match has ended.',
-            actionUrl: '/'
-          });
-        }
-      }
-      
-      // Clean up match data
-      localStorage.removeItem('activeMatchData');
-      resetMatch();
-      
-      // Use direct location change for most reliable redirect
-      window.location.href = '/';
-    };
+    const ws = new WebSocket(wsUrl);
+    ws.onopen = () => console.log('MATCH PAGE: WebSocket connection opened');
+    ws.onclose = () => console.log('MATCH PAGE: WebSocket connection closed');
+    ws.onerror = (error: Event) => console.error('MATCH PAGE: WebSocket error:', error);
     
-    // 1. WEBSOCKET APPROACH (Primary method)
-    // Listen for match_forfeited events from WebSocket
-    const handleWebsocketMessage = (event: MessageEvent) => {
+    ws.onmessage = (event: MessageEvent) => {
       try {
-        const data = JSON.parse(event.data);
-        console.log('WebSocket message received:', data);
+        const data: WebSocketMessageData = JSON.parse(event.data as string);
+        console.log('MATCH PAGE: WebSocket message received:', data);
         
-        // Check if this is a forfeit message for our match
-        if (data.type === 'match_forfeited' && data.matchId === activeMatch.id) {
-          console.log('WebSocket: Match forfeit notification received!');
-          performMatchEndRedirection('websocket');
+        if (data.type === 'match_update' && data.match) {
+          console.log('MATCH PAGE: Match update received via WebSocket');
+          setActiveMatch(data.match);
         }
         
-        // Also check for general match end events
-        if (data.type === 'match_ended' && data.matchId === activeMatch.id) {
-          console.log('WebSocket: Match end notification received!');
-          performMatchEndRedirection('websocket');
+        if (data.type === 'match_ended') {
+          console.log('MATCH PAGE: Match ended received via WebSocket');
+          matchEnded(data.reason || 'unknown');
+          setLocation('/game-over');
         }
-      } catch (e) {
-        console.error('Error parsing WebSocket message:', e);
+      } catch (error: unknown) {
+        console.error('MATCH PAGE: Error processing WebSocket message:', error);
       }
     };
     
-    // Add WebSocket event listener
-    window.addEventListener('message', handleWebsocketMessage);
-    
-    // 2. MINIMAL POLLING FALLBACK (Backup method)
-    // Only poll every 10 seconds as a last resort
-    const pollMatchStatus = async () => {
-      try {
-        // Only check active match using most likely endpoint
-        const response = await fetch(`/api/matches/active?address=${address}`);
-        if (!response.ok) return;
-        
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) return;
-        
-        const data = await response.json();
-        
-        // If we previously had a match but now there's none, it ended
-        if (!data.match && activeMatch) {
-          console.log('Polling: Active match no longer exists!');
-          performMatchEndRedirection('polling_no_match');
-          return;
-        }
-        
-        // If match exists but status has changed from active
-        if (data.match && data.match.id === activeMatch.id && data.match.status !== 'active') {
-          console.log('Polling: Match status changed to:', data.match.status);
-          performMatchEndRedirection('polling_status_change');
-        }
-      } catch (error) {
-        // Silently ignore errors for polling - it's just a fallback
-      }
-    };
-    
-    // Fallback polling - run less frequently (every 10 seconds)
-    const pollInterval = setInterval(pollMatchStatus, 10000);
+    wsRef.current = ws;
     
     // Cleanup function
     return () => {
-      window.removeEventListener('message', handleWebsocketMessage);
-      clearInterval(pollInterval);
+      console.log('MATCH PAGE: Closing WebSocket connection');
+      ws.close();
+      wsRef.current = null;
     };
-  }, [activeMatch, connected, address, resetMatch]);
+  };
 
-  
-  // Create a debounced version of activeMatch for localStorage operations
-  const debouncedMatch = useDebounce(activeMatch, 2000); // 2 second debounce
-  const previousMatchStringRef = useRef<string>('');
-  
-  // Effect for storing match data (debounced to reduce excessive writes)
-  useEffect(() => {
-    if (!debouncedMatch) return;
+  // Setup polling fallback
+  const setupPolling = (): (() => void) | undefined => {
+    if (pollIntervalRef.current) return; // Already set up
     
-    // Only write to localStorage if the match data has actually changed
-    const matchString = JSON.stringify(debouncedMatch);
-    if (matchString !== previousMatchStringRef.current) {
-      console.log('Storing debounced match data in localStorage');
-      localStorage.setItem('activeMatchData', matchString);
-      previousMatchStringRef.current = matchString;
+    console.log('MATCH PAGE: Setting up polling fallback');
+    const interval = setInterval(async () => {
+      if (!activeMatch) return;
+      
+      try {
+        const apiUrl = `${getApiBaseUrl()}/matches/${activeMatch.id}/status`;
+        const response = await fetch(apiUrl);
+        if (response.ok) {
+          const data = await response.json() as {match?: MatchData, reason?: string};
+          if (data && data.match) {
+            if (data.match.status === 'ended') {
+              console.log('MATCH PAGE: Match ended detected via polling');
+              matchEnded(data.reason || 'unknown');
+              setLocation('/game-over');
+            }
+          }
+        }
+      } catch (error: unknown) {
+        console.error('MATCH PAGE: Error polling match status:', error);
+      }
+    }, 10000); // Poll every 10 seconds
+    
+    pollIntervalRef.current = interval;
+    
+    // Cleanup function
+    return () => {
+      console.log('MATCH PAGE: Clearing polling interval');
+      clearInterval(interval);
+      pollIntervalRef.current = null;
+    };
+  };
+
+  // Initialize - load match based on URL parameter or current user
+  useEffect(() => {
+    console.log('MATCH PAGE: Initialization effect');
+    console.log('MATCH PAGE: URL matched =', matched, 'params =', params);
+    console.log('MATCH PAGE: Current URL =', window.location.href);
+    
+    // Check if there's a match ID in the URL path even if router doesn't catch it
+    const urlPath = window.location.pathname;
+    const urlMatchId = urlPath.match(/\/match\/(\w+)/)?.[1];
+    
+    if (urlMatchId) {
+      console.log('MATCH PAGE: Found match ID in URL path:', urlMatchId);
+      fetchMatchById(urlMatchId);
     }
-  }, [debouncedMatch]);
+    // First check if we have a match ID from router params
+    else if (matched && params?.matchId) {
+      console.log('MATCH PAGE: Matched route with ID:', params.matchId);
+      fetchMatchById(params.matchId);
+    } 
+    // Otherwise load the active match for the current user
+    else if (connected && address) {
+      console.log('MATCH PAGE: No match ID in URL, fetching active match');
+      fetchActiveMatch();
+    } 
+    // Not connected
+    else {
+      console.log('MATCH PAGE: Not connected, skipping fetch');
+      setIsLoading(false);
+    }
+    
+    // Always try to load from localStorage as a quick initial render
+    const storedMatchData = localStorage.getItem('activeMatchData');
+    if (storedMatchData && !activeMatch) {
+      try {
+        const matchData = JSON.parse(storedMatchData) as MatchData;
+        console.log('MATCH PAGE: Using stored match data for initial render');
+        setActiveMatch(matchData);
+      } catch (error: unknown) {
+        console.error('MATCH PAGE: Error parsing stored match data');
+      }
+    }
+    
+    // Setup realtime updates
+    const wsCleanup = setupWebSocket();
+    const pollCleanup = setupPolling();
+    
+    // Cleanup on unmount
+    return () => {
+      if (typeof wsCleanup === 'function') wsCleanup();
+      if (typeof pollCleanup === 'function') pollCleanup();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connected, address, matched, params?.matchId]);
+
+  // Fetch match data on component mount - using a ref to prevent duplicate calls
+  const hasFetchedRef = useRef(false);
   
-  // 3. Define the render logic (after all hooks)
+  useEffect(() => {
+    // Only run this once per matchId to prevent infinite loops
+    if (hasFetchedRef.current && params?.matchId) {
+      return;
+    }
+    
+    console.log('MATCH PAGE: Fetching match data for matchId =', params?.matchId);
+    
+    // Check localStorage first for immediate rendering
+    try {
+      const storedMatchData = localStorage.getItem('activeMatchData');
+      if (storedMatchData) {
+        const parsedData = JSON.parse(storedMatchData);
+        console.log('MATCH PAGE: Found match data in localStorage:', parsedData);
+        
+        // If we have a matchId from URL and it matches localStorage, use localStorage data as initial state
+        if (params?.matchId && parsedData.id === params.matchId) {
+          console.log('MATCH PAGE: Using localStorage match data for immediate rendering');
+          setForcedMatch(parsedData);
+          // Pre-emptively set loading to false to prevent flicker
+          setIsLoading(false);
+        }
+      }
+    } catch (e) {
+      console.error('MATCH PAGE: Error parsing localStorage match data:', e);
+    }
+    
+    // Then fetch from API for complete data
+    if (connected && params?.matchId) {
+      setIsLoading(true);
+      fetchMatchById(params.matchId)
+        .then(matchData => {
+          console.log('MATCH PAGE: Fetched match data:', matchData);
+          if (matchData) {
+            // Apply match data to state
+            setForcedMatch(matchData);
+            
+            // Update localStorage with latest data
+            try {
+              localStorage.setItem('activeMatchData', JSON.stringify(matchData));
+            } catch (e) {
+              console.error('Error updating localStorage with match data:', e);
+            }
+          }
+          // Mark that we've fetched to prevent infinite loops
+          hasFetchedRef.current = true;
+        })
+        .catch(err => {
+          console.error('MATCH PAGE: Error fetching match data:', err);
+          // Mark that we've fetched even on error
+          hasFetchedRef.current = true;
+        })
+        .finally(() => {
+          setIsLoading(false);
+          setInitialLoadComplete(true);
+        });
+    } else if (!params?.matchId) {
+      setInitialLoadComplete(true);
+      setIsLoading(false);
+    }
+  }, [connected, params?.matchId]); // Removed fetchMatchById from dependencies to prevent re-runs
+
+  // Save active match to localStorage when it changes
+  useEffect(() => {
+    if (activeMatch) {
+      console.log('MATCH PAGE: Saving active match to localStorage');
+      try {
+        localStorage.setItem('activeMatchData', JSON.stringify(activeMatch));
+      } catch (error: unknown) {
+        console.error('Error saving to localStorage:', error);
+      }
+    }
+  }, [activeMatch]);
+
+  // Effect for logging match state - lowest priority effect, won't cause re-renders
+  useEffect(() => {
+    // Log current match state for debugging
+    try {
+      const debugStr = JSON.stringify({ activeMatch, forcedMatch }, null, 2);
+      console.log('MATCH PAGE: Match Debug Info:', debugStr);
+      setDebugInfo(debugStr);
+    } catch (error) {
+      console.error('Error stringifying debug info:', error);
+      setDebugInfo('Error creating debug info');
+    }
+  }, [forcedMatch, activeMatch]);
+  
+  // Use the forcedMatch when needed - highest priority effect
+  // Moved down to ensure it runs after the data fetching is complete
+  useEffect(() => {
+    // Always use forcedMatch if available, to ensure immediate rendering
+    if (forcedMatch && (!activeMatch || forcedMatch.id !== activeMatch.id || 
+        (forcedMatch.status !== activeMatch.status))) {
+      console.log('Using forcedMatch as activeMatch:', forcedMatch);
+      // Call setActiveMatch without checking its return value
+      setActiveMatch(forcedMatch);
+      // Once we've set activeMatch, we can turn off loading if it's still on
+      if (isLoading) {
+        setIsLoading(false);
+      }
+    }
+  }, [forcedMatch, activeMatch, isLoading]);
+  
+  // RENDERING
+  
   // Not connected
   if (!connected) {
+    console.log('MATCH PAGE: Rendering not connected state');
     return (
       <div className="container mx-auto px-4 py-8 max-w-md">
         <Card className="gradient-card">
@@ -536,8 +411,16 @@ export default function Match() {
     );
   }
 
-  // Loading state
+  // Active match - highest priority rendering condition
+  if (activeMatch) {
+    console.log('MATCH PAGE: Rendering active match state');
+    console.log('MATCH PAGE: Debug - activeMatch =', activeMatch);
+    return <MatchDashboard activeMatch={activeMatch} />;
+  }
+
+  // Loading - only show if no active match is available yet
   if (isLoading) {
+    console.log('MATCH PAGE: Rendering loading state');
     return (
       <div className="container mx-auto px-4 py-8 max-w-md">
         <Card className="gradient-card">
@@ -558,9 +441,40 @@ export default function Match() {
       </div>
     );
   }
-  
-  // No active match
-  if (!activeMatch && !forcedMatch) {
+
+  // No active match - but first check localStorage one more time as a final safeguard
+  if (!activeMatch && initialLoadComplete) {
+    console.log('MATCH PAGE: Checking localStorage one last time before showing no match');
+    // Try to load from localStorage one final time
+    const storedMatchData = localStorage.getItem('activeMatchData');
+    if (storedMatchData) {
+      try {
+        const matchData = JSON.parse(storedMatchData) as MatchData;
+        console.log('MATCH PAGE: Found stored match data in last check:', matchData);
+        // Use the data directly instead of forcing a page reload
+        setForcedMatch(matchData);
+        setActiveMatch(matchData);
+        // Return loading indicator while we apply the match data
+        return (
+          <div className="container mx-auto px-4 py-8 max-w-md">
+            <Card className="gradient-card">
+              <CardHeader>
+                <CardTitle>Processing Match Data</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center">
+                <p className="text-text-secondary mb-4">
+                  Preparing your match...
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      } catch (error: unknown) {
+        console.error('Error parsing localStorage match data:', error);
+      }
+    }
+    console.log('MATCH PAGE: Rendering no active match state');
+    console.log('MATCH PAGE: Debug - activeMatch =', activeMatch, 'initialLoadComplete =', initialLoadComplete);
     return (
       <div className="container mx-auto px-4 py-8 max-w-md">
         <Card className="gradient-card">
@@ -582,9 +496,66 @@ export default function Match() {
       </div>
     );
   }
-  
-  // Have active match - render dashboard
-  return <MatchDashboard />;
+
+  // Commenting out the waiting screen so MatchDashboard always shows for any activeMatch
+  // Match is waiting for opponent
+  // if (activeMatch && (activeMatch.status === 'pending' || activeMatch.status === 'waiting')) {
+  //   console.log('MATCH PAGE: Rendering waiting state');
+  //   console.log('MATCH PAGE: Debug - activeMatch status =', activeMatch.status);
+  //   return (
+  //     <div className="container mx-auto px-4 py-8 max-w-md">
+  //       <Card className="gradient-card">
+  //         <CardHeader>
+  //           <CardTitle>Waiting for Opponent</CardTitle>
+  //         </CardHeader>
+  //         <CardContent className="text-center">
+  //           <div className="flex items-center justify-center space-x-2 py-4">
+  //             <div className="h-4 w-4 rounded-full bg-accent-primary animate-pulse"></div>
+  //             <div className="h-4 w-4 rounded-full bg-accent-primary animate-pulse delay-150"></div>
+  //             <div className="h-4 w-4 rounded-full bg-accent-primary animate-pulse delay-300"></div>
+  //           </div>
+  //           <p className="text-text-secondary mb-4">
+  //             Waiting for your opponent to join the match...
+  //           </p>
+  //           <p className="text-xs text-text-secondary mb-4">
+  //             Match ID: {activeMatch.id}<br/>
+  //             This page will automatically update when your opponent joins.
+  //           </p>
+  //           <Button 
+  //             className="w-full mt-4"
+  //             variant="outline"
+  //             onClick={() => setLocation("/")}
+  //           >
+  //             Return to Lobby
+  //           </Button>
+  //         </CardContent>
+  //       </Card>
+  //     </div>
+  //   );
+  // }
+
+
+  // Active match
+  if (activeMatch) {
+    console.log('MATCH PAGE: Rendering active match state');
+    console.log('MATCH PAGE: Debug - activeMatch =', activeMatch);
+    return <MatchDashboard activeMatch={activeMatch} />;
+  }
+
+  // Fallback (should never reach here)
+  console.log('MATCH PAGE: Rendering fallback state');
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-md">
+      <Card className="gradient-card">
+        <CardHeader>
+          <CardTitle>Loading Match</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-text-secondary mb-4">
+            Preparing your match...
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
-
-

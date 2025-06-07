@@ -317,7 +317,7 @@ export default function NavBar() {
               onClick={handleHomeClick}
             >
               <Logo size={28} />
-              <span className="text-xl font-bold text-[#00F0FF]">LIQIFY</span>
+              <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#05d6a9] to-[#04eac2]">LIQIFY</h2>
             </div>
             
             {/* Mobile Hamburger Menu */}
@@ -357,7 +357,7 @@ export default function NavBar() {
                           setActiveSection(null);
                           setMobileMenuOpen(false);
                         }}>
-                          <div className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 transition-colors">
+                          <div className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 cursor-pointer transition-colors">
                             <i className="ri-sword-line"></i>
                             <span>Play</span>
                           </div>
@@ -387,7 +387,7 @@ export default function NavBar() {
                               }
                             }
                           }}
-                          className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 transition-colors"
+                          className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 cursor-pointer transition-colors"
                         >
                           <i className="ri-bar-chart-line"></i>
                           <span>Leaderboard</span>
@@ -406,7 +406,7 @@ export default function NavBar() {
                               scrollToTop();
                             }, 300);
                           }}
-                          className={`flex items-center gap-2 py-2 px-4 rounded-lg transition-all ${location === '/games' ? 'text-[#05d6a9] font-semibold border-b border-[#05d6a9]' : 'text-[#808080] hover:text-[#05d6a9]/80'}`}
+                          className={`flex items-center gap-2 py-2 px-4 rounded-lg cursor-pointer transition-all ${location === '/games' ? 'text-[#05d6a9] font-semibold border-b border-[#05d6a9]' : 'text-[#808080] hover:text-[#05d6a9]/80'}`}
                         >
                           <i className="ri-gamepad-line"></i>
                           <span>Games</span>
@@ -436,7 +436,7 @@ export default function NavBar() {
                               }
                             }
                           }}
-                          className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 transition-colors"
+                          className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 cursor-pointer transition-colors"
                         >
                           <i className="ri-bar-chart-line"></i>
                           <span>Leaderboard</span>
@@ -445,7 +445,7 @@ export default function NavBar() {
                           setActiveSection(null);
                           setMobileMenuOpen(false);
                         }}>
-                          <div className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 transition-colors">
+                          <div className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 cursor-pointer transition-colors">
                             <i className="ri-tv-line"></i>
                             <span>Watch</span>
                           </div>
@@ -467,7 +467,7 @@ export default function NavBar() {
                               });
                             }
                           }}
-                          className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 transition-colors"
+                          className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 cursor-pointer transition-colors"
                         >
                           <i className="ri-user-3-line"></i>
                           <span>Profile</span>
@@ -489,7 +489,7 @@ export default function NavBar() {
                               });
                             }
                           }}
-                          className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 transition-colors"
+                          className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 cursor-pointer transition-colors"
                         >
                           <i className="ri-wallet-3-line"></i>
                           <span>Wallet</span>
@@ -498,7 +498,7 @@ export default function NavBar() {
                           setActiveSection(null);
                           setMobileMenuOpen(false);
                         }}>
-                          <div className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 transition-colors">
+                          <div className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 cursor-pointer transition-colors">
                             <i className="ri-information-line"></i>
                             <span>About</span>
                           </div>
@@ -615,14 +615,14 @@ export default function NavBar() {
                 <div className="relative">
                   <DropdownMenu open={notificationsOpen} onOpenChange={setNotificationsOpen}>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="relative">
-                        <i className="ri-notification-3-line text-xl md:text-[#333333] text-white"></i>
+                      <button className="relative p-1.5 rounded-md hover:bg-[#05d6a9]/20 transition-colors">
+                        <i className="ri-notification-2-line text-xl text-text-secondary"></i>
                         {hasUnread && (
                           <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-[#05d6a9]"></span>
                         )}
-                      </Button>
+                      </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-80 text-black rounded-md shadow-lg bg-white border border-[#05d6a9]/20">
+                    <DropdownMenuContent align="end" className="w-80 text-white rounded-md shadow-lg bg-[#012619] border border-[#05d6a9]/20">
                       <div className="py-2 px-4 border-b border-neutral/20">
                         <h3 className="font-medium">Notifications</h3>
                       </div>
@@ -640,7 +640,7 @@ export default function NavBar() {
                             return (
                               <div 
                                 key={notification.id} 
-                                className={`py-3 px-4 border-b border-neutral/10 hover:bg-bg-secondary ${!notification.read ? 'bg-bg-secondary/50' : ''}`}
+                                className={`py-3 px-4 border-b border-neutral/10 cursor-pointer hover:bg-[#05d6a9]/40 transition-colors duration-200 ${!notification.read ? 'bg-[#05d6a9]/20' : ''}`}
                                 onClick={() => {
                                   if (notification.actionUrl) {
                                     setLocation(notification.actionUrl);
@@ -670,7 +670,7 @@ export default function NavBar() {
                         </ScrollArea>
                       ) : (
                         <div className="p-4 text-center">
-                          <p className="text-black">No notifications</p>
+                          <p className="text-white">No notifications</p>
                         </div>
                       )}
                       

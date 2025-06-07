@@ -23,7 +23,7 @@
 // import { Input } from "@/components/ui/input";
 
 // // Invite Modal Component
-// function InviteModal({ inviteCode, isOpen, onClose }: { inviteCode: string, isOpen: boolean, onClose: () => void }) {
+// function InviteModal({ inviteCode, matchId, isOpen, onClose }: { inviteCode: string, matchId: string, isOpen: boolean, onClose: () => void }) {
 //   const copyToClipboard = () => {
 //     navigator.clipboard.writeText(inviteCode);
     
@@ -341,7 +341,7 @@
 // import { Input } from "@/components/ui/input";
 
 // // Invite Modal Component
-// function InviteModal({ inviteCode, isOpen, onClose }: { inviteCode: string, isOpen: boolean, onClose: () => void }) {
+// function InviteModal({ inviteCode, matchId, isOpen, onClose }: { inviteCode: string, matchId: string, isOpen: boolean, onClose: () => void }) {
 //   const copyToClipboard = () => {
 //     navigator.clipboard.writeText(inviteCode);
     
@@ -745,7 +745,7 @@ import {
 import { Input } from "@/components/ui/input";
 
 // Invite Modal Component
-function InviteModal({ inviteCode, isOpen, onClose }: { inviteCode: string, isOpen: boolean, onClose: () => void }) {
+function InviteModal({ inviteCode, matchId, isOpen, onClose }: { inviteCode: string, matchId: string, isOpen: boolean, onClose: () => void }) {
   const copyToClipboard = () => {
     navigator.clipboard.writeText(inviteCode);
     
@@ -797,9 +797,33 @@ function InviteModal({ inviteCode, isOpen, onClose }: { inviteCode: string, isOp
           </ol>
         </div>
         
-        <DialogFooter className="sm:justify-center">
-          <Button onClick={onClose} variant="outline">
+        <DialogFooter className="sm:justify-start space-x-2">
+          <Button onClick={onClose} variant="outline" className="w-1/2">
             Close
+          </Button>
+          <Button 
+            onClick={() => {
+              onClose();
+              // Store the match ID in localStorage directly
+              try {
+                const minimalMatch = {
+                  id: matchId,
+                  status: 'pending',
+                  createdAt: new Date().toISOString(),
+                };
+                
+                console.log('Storing minimal match data in localStorage:', minimalMatch);
+                localStorage.setItem('activeMatchData', JSON.stringify(minimalMatch));
+              } catch (e) {
+                console.error('Error handling localStorage for match data:', e);
+              }
+              
+              // Navigate to match page with matchId
+              window.location.href = `/match/${matchId}`;
+            }}
+            className="w-1/2 bg-accent-primary hover:bg-accent-primary/80"
+          >
+            Go to Match
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -816,6 +840,7 @@ export default function MatchQueue() {
   // Invite modal state
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [currentInviteCode, setCurrentInviteCode] = useState("");
+  const [currentMatchId, setCurrentMatchId] = useState("");
   
   // Join with invite code state
   const [joinInviteCode, setJoinInviteCode] = useState("");
@@ -952,14 +977,44 @@ export default function MatchQueue() {
     }
 
     try {
+      console.log('Creating friend match with currency pair:', currencyPair, 'and duration:', duration);
+      
       // Convert duration from minutes to seconds
       const durationInSeconds = parseInt(duration) * 60;
       
       // Pass currency pair and duration to the createFriendMatch function
-      const inviteCode = await createFriendMatch(currencyPair, durationInSeconds);
+      const result = await createFriendMatch(currencyPair, durationInSeconds);
+      console.log('Friend match created with result:', result);
       
-      // Store the invite code and show the modal
+      // Extract invite code and match ID from the result
+      const inviteCode = typeof result === 'object' ? result.inviteCode : result;
+      const matchId = typeof result === 'object' ? result.matchId : null;
+      
+      if (!inviteCode) {
+        throw new Error('Failed to get invite code from created match');
+      }
+      
+      console.log('Setting current invite code:', inviteCode, 'and match ID:', matchId);
+      
+      // Store the invite code and match ID
       setCurrentInviteCode(inviteCode);
+      if (matchId) {
+        setCurrentMatchId(matchId);
+        
+        // Create a minimal match object to store in localStorage
+        const minimalMatch = {
+          id: matchId,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+          currencyPair,
+          durationSeconds: durationInSeconds
+        };
+        
+        console.log('Storing minimal match data in localStorage:', minimalMatch);
+        localStorage.setItem('activeMatchData', JSON.stringify(minimalMatch));
+      }
+      
+      // Show the invite modal
       setShowInviteModal(true);
       
       toast({
@@ -1020,7 +1075,8 @@ export default function MatchQueue() {
     <div className="mb-8">
       {/* Invite Modal */}
       <InviteModal 
-        inviteCode={currentInviteCode} 
+        inviteCode={currentInviteCode}
+        matchId={currentMatchId}
         isOpen={showInviteModal} 
         onClose={() => setShowInviteModal(false)}
       />

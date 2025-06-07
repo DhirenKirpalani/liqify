@@ -389,6 +389,7 @@ function Router(): JSX.Element {
         <Switch>
           <Route path="/" component={Home} />
           <Route path="/games" component={Games} />
+          <Route path="/match/:matchId" component={Match} />
           <Route path="/match" component={Match} />
           <Route path="/leaderboard" component={Leaderboard} />
           <Route path="/reels" component={Reels} />

@@ -143,7 +143,7 @@
 //             if (activeMatch?.id === data.matchId) {
 //               setActiveMatch(prev => prev ? {
 //                 ...prev,
-//                 spectators: [...prev.spectators, data.spectator]
+//                 spectators: [...(prev.spectators || []), data.spectator]
 //               } : null);
 //             }
 //             break;
@@ -462,7 +462,7 @@
 //             if (activeMatch?.id === data.matchId) {
 //               setActiveMatch(prev => prev ? {
 //                 ...prev,
-//                 spectators: [...prev.spectators, data.spectator]
+//                 spectators: [...(prev.spectators || []), data.spectator]
 //               } : null);
 //             }
 //             break;
@@ -773,7 +773,7 @@
 //             if (activeMatch?.id === data.matchId) {
 //               setActiveMatch(prev => prev ? {
 //                 ...prev,
-//                 spectators: [...prev.spectators, data.spectator]
+//                 spectators: [...(prev.spectators || []), data.spectator]
 //               } : null);
 //             }
 //             break;
@@ -1111,7 +1111,7 @@
 //             if (activeMatch?.id === data.matchId) {
 //               setActiveMatch(prev => prev ? {
 //                 ...prev,
-//                 spectators: [...prev.spectators, data.spectator]
+//                 spectators: [...(prev.spectators || []), data.spectator]
 //               } : null);
 //             }
 //             break;
@@ -1429,7 +1429,7 @@
 //             if (activeMatch?.id === data.matchId) {
 //               setActiveMatch(prev => prev ? {
 //                 ...prev,
-//                 spectators: [...prev.spectators, data.spectator]
+//                 spectators: [...(prev.spectators || []), data.spectator]
 //               } : null);
 //             }
 //             break;
@@ -1788,7 +1788,7 @@
 //             if (activeMatch?.id === data.matchId) {
 //               setActiveMatch(prev => prev ? {
 //                 ...prev,
-//                 spectators: [...prev.spectators, data.spectator]
+//                 spectators: [...(prev.spectators || []), data.spectator]
 //               } : null);
 //             }
 //             break;
@@ -1946,20 +1946,54 @@
 // };
 
 // // Hook to use match context
-// export const useMatch = () => {
-//   const context = useContext(MatchContext);
-//   if (context === undefined) {
-//     throw new Error('useMatch must be used within a MatchProvider');
-//   }
-//   return context;
-// };
-
-import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect, useRef } from 'react';
-import { useWebSocket } from '@/hooks/useWebSocket';
-import { useWallet } from '@/hooks/useWallet';
+import { useState, useEffect, useCallback, useContext, createContext, ReactNode, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useWallet } from '@/hooks/useWallet';
+import { useWebSocket } from '@/hooks/useWebSocket';
+import { Button } from '@/components/ui/button';
 import { apiRequest } from '@/lib/queryClient';
 import { queryClient } from '@/lib/queryClient';
+// Import matchStorage types but load the module dynamically to avoid SSR issues
+import type { Match as MatchStorageType, MatchPlayer } from '../utils/matchStorage';
+
+// Convert between Match types
+const convertToMatchStorage = (match: Match): MatchStorageType => {
+  return {
+    id: match.id,
+    player1: match.player1 as MatchPlayer,
+    player2: match.player2 as MatchPlayer | undefined,
+    market: match.market,
+    duration: match.duration,
+    stake: match.stake || '0',
+    status: match.status === 'ended' ? 'completed' : match.status,
+    startTime: match.startTime,
+    endTime: match.endTime,
+    winner: match.winner,
+    gameCode: match.gameCode,
+    createdAt: match.createdAt || Date.now()
+  };
+};
+
+const convertFromMatchStorage = (match: MatchStorageType): Match => {
+  return {
+    id: match.id,
+    player1: match.player1 as Player,
+    player2: match.player2 as Player | undefined,
+    market: match.market,
+    duration: match.duration,
+    stake: match.stake,
+    status: match.status === 'completed' ? 'ended' : match.status,
+    startTime: match.startTime,
+    endTime: match.endTime,
+    winner: match.winner,
+    gameCode: match.gameCode,
+    createdAt: match.createdAt,
+    // Add compatibility fields
+    player: match.player1 as Player,
+    opponent: match.player2 as Player | undefined,
+    spectators: []
+  };
+};
 
 // Utility function to throttle high-frequency updates
 function useThrottledState<T>(initialState: T, interval: number = 1000) {
@@ -2023,14 +2057,25 @@ type Player = {
   pnl: number;
 };
 
-type Match = {
+// Main Match interface for internal use
+export interface Match {
   id: string;
-  player: Player;
-  opponent: Player;
+  player1: Player;
+  player2?: Player;
   market: string;
   duration: number;
-  startTime: number;
-  spectators: string[];
+  startTime?: number;
+  stake: string;
+  status: 'pending' | 'active' | 'ended' | 'completed' | 'cancelled';
+  gameCode?: string;
+  createdAt?: number;
+  endTime?: number;
+  winner?: string;
+  
+  // Legacy fields to maintain compatibility with existing code
+  player?: Player;
+  opponent?: Player;
+  spectators?: string[];
 };
 
 type MatchSummary = {
@@ -2057,14 +2102,13 @@ type MatchContextType = {
   matchSummary: MatchSummary | null;
   timeRemaining: number;
   joinQueue: () => Promise<void>;
-  createFriendMatch: (market?: string, duration?: number) => Promise<string>;
-  joinMatch: (matchId: string) => Promise<void>;
+  createFriendMatch: (market?: string, duration?: number) => Promise<{ inviteCode: string; matchId: string }>;
+  joinMatch: (inviteCode: string) => Promise<void>;
   spectateMatch: (matchId: string) => Promise<void>;
   forfeitMatch: () => Promise<void>;
   resetMatch: () => void;
   rematch: () => Promise<void>;
   formatTime: (seconds: number) => string;
-  // Add function to set active match directly
   setActiveMatch: (match: Match | null) => void;
 };
 
@@ -2152,37 +2196,95 @@ export const MatchProvider = ({ children }: { children: ReactNode }) => {
             // Match found, update match state
             console.log('WebSocket: match_found event received', data);
             const match: Match = data.match;
+            
+            // CRITICAL FIX: Ensure we properly save complete match data with all required fields
+            // This prevents blank screen when navigating to match page
+            console.log('Setting active match with data:', match);
+            
+            // Update active match in context first to ensure instant availability
             setActiveMatch(match);
             setMatchEnded(false);
             startTimer(match.duration);
             
-            toast({
-              title: 'Match Found',
-              description: `You are matched with ${match.opponent.username}`,
-            });
+            // Synchronously save to localStorage with error handling for persistence
+            try {
+              console.log('Saving match data to localStorage');
+              localStorage.setItem('activeMatchData', JSON.stringify(match));
+            } catch (storageError) {
+              console.error('Error saving match data to localStorage:', storageError);
+            }
             
-            // Force redirect to match page - use a more reliable approach
-            // First store match data to ensure it's available after redirect
-            localStorage.setItem('activeMatchData', JSON.stringify(match));
-            // Use immediate redirect with window.location for most reliable navigation
-            window.location.href = '/match';
+            // Show ONLY ONE notification with manual navigation button
+            toast({
+              title: "Match Found",
+              description: `You are matched with ${match.opponent?.username || 'another player'}. Click below to join the match.`,
+              action: (
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  onClick={() => {
+                    // CRITICAL FIX: Double ensure match data is saved before navigation
+                    try {
+                      localStorage.setItem('activeMatchData', JSON.stringify(match));
+                    } catch (e) {}
+                    
+                    // Use window.location.href for reliable navigation with fresh state
+                    window.location.href = `/match/${match.id}`;
+                  }}
+                >
+                  Join Match
+                </Button>
+              ),
+              duration: 0, // Keep visible until dismissed
+            });
             break;
             
           case 'match_update':
             // Update match state (PnL changes, new spectators, etc.)
-            // Get current timestamp to limit update frequency
-            const now = Date.now();
+            console.log('WebSocket: match_update event received', data);
+            setActiveMatch(prev => {
+              if (!prev) return null;
+              const updatedMatch = { ...prev, ...data.update };
+              
+              // Special handling for match status transition from pending to active
+              if (prev.status === 'pending' && updatedMatch.status === 'active') {
+                console.log('Match status changed from pending to active');
+                
+                // Show a toast notification to inform the user
+                toast({
+                  title: "Opponent Joined!",
+                  description: "Your opponent has joined the match! The game is now active.",
+                  action: (
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      onClick={() => window.location.reload()}
+                    >
+                      Refresh Game
+                    </Button>
+                  ),
+                  duration: 5000,
+                });
+              }
+              
+              // Update localStorage with the most recent match state
+              try {
+                localStorage.setItem('activeMatchData', JSON.stringify(updatedMatch));
+              } catch (storageError) {
+                console.error('Error saving updated match data to localStorage:', storageError);
+              }
+              
+              return updatedMatch;
+            });
             
-            // Check if this is a frequent update (like PnL changes)
             const isPnLUpdate = data.update?.player?.pnl !== undefined || 
                               data.update?.opponent?.pnl !== undefined;
             
-            // For PnL updates, we want to throttle them more aggressively
-            // For other updates (spectators, etc), apply immediately
-            const minUpdateInterval = isPnLUpdate ? 1000 : 200; // 1 second for PnL, 200ms for others
+            // Get current timestamp to rate-limit frequent updates
+            const currentTime = Date.now();
             
-            if (!isPnLUpdate || now - lastUpdateTimeRef.current > minUpdateInterval) {
-              lastUpdateTimeRef.current = now;
+            if (!isPnLUpdate || (currentTime - lastUpdateTimeRef.current) > 1000) {
+              lastUpdateTimeRef.current = currentTime;
               // Apply updates directly with careful type handling
               if (latestMatchRef.current) {
                 const updatedMatch = { ...latestMatchRef.current, ...data.update };
@@ -2192,11 +2294,24 @@ export const MatchProvider = ({ children }: { children: ReactNode }) => {
             break;
             
           case 'match_ended':
-            // Match ended, show summary
+            // Match ended, update state
+            console.log('WebSocket: match_ended event received', data);
             setMatchEnded(true);
             setMatchSummary(data.summary);
             setTimeRemaining(0);
             if (timer) clearInterval(timer);
+            
+            // Ensure we keep match data until user explicitly navigates away
+            // This prevents flickering between states
+            try {
+              // Keep the match data but mark it as ended
+              if (latestMatchRef.current) {
+                const endedMatch = { ...latestMatchRef.current, status: 'ended' };
+                localStorage.setItem('activeMatchData', JSON.stringify(endedMatch));
+              }
+            } catch (storageError) {
+              console.error('Error updating match end state in localStorage:', storageError);
+            }
             
             toast({
               title: data.summary.playerPnl > data.summary.opponentPnl ? 'Victory!' : 'Defeat!',
@@ -2209,7 +2324,7 @@ export const MatchProvider = ({ children }: { children: ReactNode }) => {
             if (activeMatch?.id === data.matchId) {
               setActiveMatch(prev => prev ? {
                 ...prev,
-                spectators: [...prev.spectators, data.spectator]
+                spectators: [...(prev.spectators || []), data.spectator]
               } : null);
             }
             break;
@@ -2255,7 +2370,7 @@ export const MatchProvider = ({ children }: { children: ReactNode }) => {
     }
     
     try {
-
+      // Step 1: Create the match via API
       const response = await apiRequest({
         url: '/api/matches/create',
         method: 'POST',
@@ -2266,53 +2381,67 @@ export const MatchProvider = ({ children }: { children: ReactNode }) => {
         },
       });
       const data = await response.json();
-
       
-      // Get full match details immediately after creation
+      // Step 2: Get full match details
       try {
-
+        const matchStorage = await import('../utils/matchStorage');
         const matchResponse = await apiRequest({
           url: `/api/matches/${data.matchId}`,
           method: 'GET'
         });
         const matchData = await matchResponse.json();
-
         
-        // Store the match data and navigate immediately instead of waiting for WebSocket
+        // Get user data for enhanced match object
+        const username = localStorage.getItem('cryptoclash_username') || 'Player 1';
+        const stake = localStorage.getItem('cryptoclash_stake') || '100';
+        
+        // Step 3: Store match data
         if (matchData.match) {
-
-          setActiveMatch(matchData.match);
-          localStorage.setItem('activeMatchData', JSON.stringify(matchData.match));
+          // Use API match data if available
+          const matchToStore: Match = {
+            ...matchData.match,
+            gameCode: data.inviteCode,
+            status: 'pending',
+            createdAt: Date.now()
+          };
           
-          // Force navigation to match page
-          try {
-            window.location.href = '/match';
-            
-            // Add a fallback approach if the redirection doesn't happen immediately
-            setTimeout(() => {
-              const currentPath = window.location.pathname;
-              
-              if (currentPath !== '/match') {
-                window.location.replace('/match');
-                
-                // Another fallback for older browsers
-                setTimeout(() => {
-                  if (window.location.pathname !== '/match') {
-                    window.location = new URL('/match', window.location.origin) as any;
-                  }
-                }, 500);
-              }
-            }, 1000);
-          } catch (navError) {
-            console.error('Error navigating to match page:', navError);
-          }
+          // Store the match and set as active
+          await matchStorage.storeMatch(convertToMatchStorage(matchToStore));
+          await matchStorage.setActiveMatch(convertToMatchStorage(matchToStore));
+          setActiveMatch(matchToStore);
+          console.log('Match stored in localStorage with API data:', matchToStore.id);
+        } else {
+          // Create minimal match object if API doesn't return full details
+          const newMatch: Match = {
+            id: data.matchId,
+            player1: {
+              username,
+              pnl: 0
+            },
+            market,
+            duration,
+            stake,
+            status: 'pending',
+            gameCode: data.inviteCode,
+            createdAt: Date.now()
+          };
+          
+          // Store the minimal match and set as active
+          await matchStorage.storeMatch(convertToMatchStorage(newMatch));
+          await matchStorage.setActiveMatch(convertToMatchStorage(newMatch));
+          setActiveMatch(newMatch);
+          console.log('Match stored in localStorage with minimal data:', newMatch.id);
         }
       } catch (fetchError) {
-        console.error('Failed to fetch match details:', fetchError);
-        // Even if fetch fails, return the invite code so the user isn't blocked
+        console.error('Failed to fetch match details or store match:', fetchError);
+        // Continue execution - we can still return the invite code even if storage fails
       }
       
-      return data.inviteCode;
+      // Always return the invite code and match ID
+      return {
+        inviteCode: data.inviteCode,
+        matchId: data.matchId
+      };
     } catch (error) {
       console.error('Failed to create friend match:', error);
       throw error;
@@ -2347,7 +2476,34 @@ export const MatchProvider = ({ children }: { children: ReactNode }) => {
         body: { address }
       });
       
-      // Server will send match_found event via WebSocket
+      // Update match in localStorage
+      const matchStorage = await import('../utils/matchStorage');
+      const existingMatch = matchStorage.getMatch(lookupData.matchId);
+      
+      if (existingMatch) {
+        const username = localStorage.getItem('cryptoclash_username') || 'Player 2';
+        
+        // Update the match with player 2 information
+        matchStorage.updateMatch(lookupData.matchId, {
+          player2: {
+            username,
+            pnl: 0
+          },
+          status: 'active',
+          startTime: Date.now()
+        });
+        
+        // Set this as the active match
+        const updatedMatch = matchStorage.getMatch(lookupData.matchId);
+        if (updatedMatch) {
+          matchStorage.setActiveMatch(updatedMatch);
+        }
+      }
+      
+      // Navigate to the match page with the match ID
+      window.location.href = `/match/${lookupData.matchId}`;
+      
+      // Server will also send match_found event via WebSocket
     } catch (error) {
       console.error('Failed to join match:', error);
       throw error;
@@ -2394,9 +2550,21 @@ export const MatchProvider = ({ children }: { children: ReactNode }) => {
       setTimer(null);
     }
     
+    // Clear match data from localStorage using our storage utility
+    console.log('Clearing active match from localStorage');
+    const clearActiveMatch = async () => {
+      try {
+        const matchStorage = await import('../utils/matchStorage');
+        matchStorage.setActiveMatch(null);
+      } catch (error) {
+        console.error('Failed to clear active match from localStorage:', error);
+      }
+    };
+    clearActiveMatch();
+    
     // Invalidate match-related queries
     queryClient.invalidateQueries({ queryKey: ['/api/matches'] });
-  }, [timer]);
+  }, [timer, setActiveMatch, setMatchEnded, setMatchSummary, setTimeRemaining, setTimer]); // Add missing dependencies
 
   // Request a rematch
   const rematch = useCallback(async () => {
@@ -2420,6 +2588,64 @@ export const MatchProvider = ({ children }: { children: ReactNode }) => {
       throw error;
     }
   }, [matchEnded, matchSummary, address, toast]);
+
+  // Initialize from localStorage on component mount
+  useEffect(() => {
+    const loadMatchFromLocalStorage = async () => {
+      try {
+        const matchStorage = await import('../utils/matchStorage');
+        const storedMatch = matchStorage.getActiveMatch();
+        
+        if (storedMatch) {
+          console.log('Loading active match from localStorage:', storedMatch);
+          // Convert from storage format to our internal format
+          const internalMatch = convertFromMatchStorage(storedMatch);
+          setActiveMatch(internalMatch);
+          
+          // Set match state based on stored match
+          if (storedMatch.status === 'completed') {
+            setMatchEnded(true);
+          } else if (storedMatch.status === 'active' && storedMatch.startTime && storedMatch.duration) {
+            const elapsedSeconds = Math.floor((Date.now() - storedMatch.startTime) / 1000);
+            const remainingTime = Math.max(0, storedMatch.duration - elapsedSeconds);
+            
+            if (remainingTime > 0) {
+              startTimer(remainingTime);
+            } else {
+              setMatchEnded(true);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load match from localStorage:', error);
+      }
+    };
+    
+    loadMatchFromLocalStorage();
+  }, [/* Dependencies fixed: remove startTimer to prevent circular dependency */]); // Only re-run on mount
+  
+  // Update localStorage when activeMatch changes
+  useEffect(() => {
+    const updateStoredMatch = async () => {
+      try {
+        if (activeMatch) {
+          const matchStorage = await import('../utils/matchStorage');
+          // Convert to storage format before saving
+          const storageMatch = convertToMatchStorage(activeMatch);
+          matchStorage.setActiveMatch(storageMatch);
+
+          // Also ensure match is stored in the matches collection
+          if (activeMatch.id) {
+            matchStorage.storeMatch(storageMatch);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to update match in localStorage:', error);
+      }
+    };
+    
+    updateStoredMatch();
+  }, [activeMatch]);
 
   const value = {
     activeMatch,

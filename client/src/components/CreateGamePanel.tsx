@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useWallet } from "@/hooks/useWallet";
 import { useMatch } from "@/hooks/useMatch";
 import { useToast } from "@/hooks/use-toast";
+import { storeGameCode } from "../utils/gameCodeStorage";
 
 export default function CreateGamePanel() {
   // Initialize state with values from localStorage or defaults
@@ -20,6 +21,7 @@ export default function CreateGamePanel() {
   });
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [gameCode, setGameCode] = useState<string>("");
+  const [matchId, setMatchId] = useState<string>("");
   const [showGameCodeModal, setShowGameCodeModal] = useState<boolean>(false);
   const [isCopied, setIsCopied] = useState<boolean>(false);
   
@@ -59,13 +61,54 @@ export default function CreateGamePanel() {
       let inviteCode;
       try {
         // Try to call the createFriendMatch method
-        inviteCode = await createFriendMatch(market, parseInt(duration.split(' ')[0], 10));
-        console.log('Game created with invite code:', inviteCode);
+        const result = await createFriendMatch(market, parseInt(duration.split(' ')[0], 10));
+        
+        // The function now returns an object with both inviteCode and matchId
+        inviteCode = result.inviteCode;
+        setMatchId(result.matchId);
+        console.log('Game created with invite code:', inviteCode, 'and match ID:', result.matchId);
+        
+        // Store the game code in localStorage for our simulated backend
+        try {
+          const playerName = localStorage.getItem('cryptoclash_username') || 'Player 1';
+          storeGameCode(
+            inviteCode,
+            result.matchId,
+            playerName,
+            market,
+            duration,
+            stake
+          );
+          console.log('Game code stored in localStorage:', inviteCode);
+        } catch (storageError) {
+          console.error('Error storing game code:', storageError);
+          // Continue with the game creation process even if storage fails
+        }
       } catch (innerError) {
         console.error('Error in createFriendMatch:', innerError);
         // Generate a placeholder code for testing
         inviteCode = 'TEMP-' + Math.random().toString(36).substring(2, 8).toUpperCase();
         console.log('Generated temp invite code:', inviteCode);
+        
+        // Generate a random match ID and store the temp code in localStorage
+        try {
+          const tempMatchId = 'temp_' + Math.random().toString(36).substring(2, 8);
+          setMatchId(tempMatchId);
+          const playerName = localStorage.getItem('cryptoclash_username') || 'Player 1';
+          
+          storeGameCode(
+            inviteCode,
+            tempMatchId,
+            playerName,
+            market,
+            duration,
+            stake
+          );
+          console.log('Temp game code stored in localStorage:', inviteCode);
+        } catch (storageError) {
+          console.error('Error storing temp game code:', storageError);
+          // Continue with the game creation process even if storage fails
+        }
       }
       
       // Set the game code and show the modal
@@ -312,10 +355,25 @@ export default function CreateGamePanel() {
             </div>
             
             {/* Footer */}
-            <div className="flex justify-end mt-6">
+            <div className="flex justify-between gap-4 mt-6">
+              <Button
+                onClick={() => {
+                  setShowGameCodeModal(false);
+                  // Navigate to specific match using matchId
+                  if (matchId) {
+                    window.location.href = `/match/${matchId}`;
+                  } else {
+                    // Fallback to general match page if no matchId available
+                    window.location.href = '/match';
+                  }
+                }}
+                className="w-1/2 h-12 bg-[#0E0E10]/70 border border-[#00F0FF]/50 hover:bg-[#00F0FF]/30 hover:border-[#00F0FF]/70 text-[#00F0FF] rounded-md transition-all duration-300 shadow-[0_0_10px_rgba(0,240,255,0.3)]"
+              >
+                Go to Match
+              </Button>
               <Button
                 onClick={() => setShowGameCodeModal(false)}
-                className="w-full h-12 bg-[#0E0E10]/70 border border-[#00F0FF]/30 hover:bg-[#00F0FF]/20 hover:border-[#00F0FF]/50 text-white rounded-md transition-all duration-300 shadow-[0_0_10px_rgba(0,240,255,0.2)]"
+                className="w-1/2 h-12 bg-[#0E0E10]/70 border border-[#00F0FF]/30 hover:bg-[#00F0FF]/20 hover:border-[#00F0FF]/50 text-white rounded-md transition-all duration-300 shadow-[0_0_10px_rgba(0,240,255,0.2)]"
               >
                 Close
               </Button>
