@@ -5,6 +5,7 @@ import WalletConnectModal from "@/components/WalletConnectModal";
 import CreateGamePanel from "@/components/CreateGamePanel";
 import TradingChart from "@/components/TradingChart";
 import MarketTable from "@/components/MarketTable";
+import HyperliquidMarketTable from "@/components/HyperliquidMarketTable";
 import LeaderboardPreview from "@/components/LeaderboardPreview";
 import GameItem from "@/components/GameItem";
 import PostMatchSummary from "@/components/PostMatchSummary";
@@ -501,6 +502,15 @@ export default function Games() {
                   <div className="absolute bottom-0 left-0 w-12 h-[2px] bg-[#FFCC00] shadow-[0_0_8px_rgba(255,204,0,0.6)]"></div>
                 </div>
                 <MarketTable />
+              </div>
+              
+              {/* Hyperliquid Market Table */}
+              <div className="backdrop-blur-md bg-[#0E0E10]/40 rounded-xl border border-[#00F0FF]/20 shadow-[0_0_15px_rgba(0,240,255,0.1)] overflow-hidden relative p-1">
+                <div className="absolute top-0 right-0 w-24 h-24">
+                  <div className="absolute top-0 right-0 w-[2px] h-12 bg-[#00F0FF] shadow-[0_0_8px_rgba(0,240,255,0.6)]"></div>
+                  <div className="absolute top-0 right-0 w-12 h-[2px] bg-[#00F0FF] shadow-[0_0_8px_rgba(0,240,255,0.6)]"></div>
+                </div>
+                <HyperliquidMarketTable />
               </div>
               
               {/* Leaderboard Preview */}
