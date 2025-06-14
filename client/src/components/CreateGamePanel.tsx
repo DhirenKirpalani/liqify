@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useWallet } from "@/hooks/useWallet";
 import { useMatch } from "@/hooks/useMatch";
 import { useToast } from "@/hooks/use-toast";
@@ -10,14 +12,18 @@ import { storeGameCode } from "../utils/gameCodeStorage";
 
 export default function CreateGamePanel() {
   // Initialize state with values from localStorage or defaults
-  const [market, setMarket] = useState<string>(() => {
-    return localStorage.getItem("cryptoclash_market") || "ETH-PERP";
-  });
   const [stake, setStake] = useState<string>(() => {
     return localStorage.getItem("cryptoclash_stake") || "100";
   });
+  const [principal, setPrincipal] = useState<string>(() => {
+    return localStorage.getItem("cryptoclash_principal") || "1000";
+  });
   const [duration, setDuration] = useState<string>(() => {
     return localStorage.getItem("cryptoclash_duration") || "10 m";
+  });
+  const [isPublic, setIsPublic] = useState<boolean>(() => {
+    const saved = localStorage.getItem("cryptoclash_isPublic");
+    return saved ? saved === "true" : true; // Default to true (public)
   });
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [gameCode, setGameCode] = useState<string>("");
@@ -31,16 +37,20 @@ export default function CreateGamePanel() {
   
   // Save form values to localStorage when they change
   useEffect(() => {
-    localStorage.setItem("cryptoclash_market", market);
-  }, [market]);
-  
-  useEffect(() => {
     localStorage.setItem("cryptoclash_stake", stake);
   }, [stake]);
   
   useEffect(() => {
+    localStorage.setItem("cryptoclash_principal", principal);
+  }, [principal]);
+  
+  useEffect(() => {
     localStorage.setItem("cryptoclash_duration", duration);
   }, [duration]);
+
+  useEffect(() => {
+    localStorage.setItem("cryptoclash_isPublic", isPublic.toString());
+  }, [isPublic]);
 
   const handleCreateGame = async () => {
     if (!connected) {
@@ -54,75 +64,79 @@ export default function CreateGamePanel() {
     
     try {
       setIsCreating(true);
-      console.log('Creating game with market:', market, 'duration:', parseInt(duration.split(' ')[0], 10));
+      console.log('Creating game with duration:', parseInt(duration.split(' ')[0], 10), 'isPublic:', isPublic);
       
       // For testing - if the createFriendMatch function is not working,
       // generate a temporary code to show the modal
-      let inviteCode;
+      let inviteCode = '';
       try {
         // Try to call the createFriendMatch method
-        const result = await createFriendMatch(market, parseInt(duration.split(' ')[0], 10));
+        const result = await createFriendMatch('ETH-PERP', parseInt(duration.split(' ')[0], 10));
         
         // The function now returns an object with both inviteCode and matchId
-        inviteCode = result.inviteCode;
+        // Only generate code if it's a private game
+        if (!isPublic) {
+          inviteCode = result.inviteCode;
+        }
         setMatchId(result.matchId);
-        console.log('Game created with invite code:', inviteCode, 'and match ID:', result.matchId);
+        console.log('Game created with match ID:', result.matchId, isPublic ? '' : 'and invite code: ' + inviteCode);
         
-        // Store the game code in localStorage for our simulated backend
-        try {
-          const playerName = localStorage.getItem('cryptoclash_username') || 'Player 1';
-          storeGameCode(
-            inviteCode,
-            result.matchId,
-            playerName,
-            market,
-            duration,
-            stake
-          );
-          console.log('Game code stored in localStorage:', inviteCode);
-        } catch (storageError) {
-          console.error('Error storing game code:', storageError);
-          // Continue with the game creation process even if storage fails
+        // Store the game code in localStorage for our simulated backend (only for private games)
+        if (!isPublic) {
+          try {
+            const playerName = localStorage.getItem('cryptoclash_username') || 'Player 1';
+            storeGameCode(
+              inviteCode,
+              result.matchId,
+              playerName,
+              'ETH-PERP',
+              duration,
+              stake
+            );
+            console.log('Game code stored in localStorage:', inviteCode);
+          } catch (storageError) {
+            console.error('Error storing game code:', storageError);
+            // Continue with the game creation process even if storage fails
+          }
         }
       } catch (innerError) {
         console.error('Error in createFriendMatch:', innerError);
-        // Generate a placeholder code for testing
-        inviteCode = 'TEMP-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-        console.log('Generated temp invite code:', inviteCode);
-        
-        // Generate a random match ID and store the temp code in localStorage
-        try {
-          const tempMatchId = 'temp_' + Math.random().toString(36).substring(2, 8);
-          setMatchId(tempMatchId);
-          const playerName = localStorage.getItem('cryptoclash_username') || 'Player 1';
+        // Generate a placeholder code for testing (only for private games)
+        if (!isPublic) {
+          inviteCode = 'TEMP-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+          console.log('Generated temp invite code:', inviteCode);
           
-          storeGameCode(
-            inviteCode,
-            tempMatchId,
-            playerName,
-            market,
-            duration,
-            stake
-          );
-          console.log('Temp game code stored in localStorage:', inviteCode);
-        } catch (storageError) {
-          console.error('Error storing temp game code:', storageError);
-          // Continue with the game creation process even if storage fails
+          // Generate a random match ID and store the temp code in localStorage
+          try {
+            const tempMatchId = 'temp_' + Math.random().toString(36).substring(2, 8);
+            setMatchId(tempMatchId);
+            const playerName = localStorage.getItem('cryptoclash_username') || 'Player 1';
+            
+            storeGameCode(
+              inviteCode,
+              tempMatchId,
+              playerName,
+              'ETH-PERP',
+              duration,
+              stake
+            );
+            console.log('Temp game code stored in localStorage:', inviteCode);
+          } catch (storageError) {
+            console.error('Error storing temp game code:', storageError);
+            // Continue with the game creation process even if storage fails
+          }
         }
       }
       
       // Set the game code and show the modal
-      setGameCode(inviteCode);
-      console.log('Preparing to show modal for code:', inviteCode);
-      
-      // First close any existing modal
-      setShowGameCodeModal(false);
-      
-      // Force a re-render cycle 
-      const showInviteModal = (code: string) => {
-        console.log('Preparing to show modal for code:', code);
-        // Set code first
-        setGameCode(code);
+      // Always show the modal, but only show game code for private games
+      const showInviteModal = () => {
+        console.log('Preparing to show modal, isPublic:', isPublic);
+        
+        // For private games, make sure we set the game code
+        if (!isPublic && inviteCode) {
+          setGameCode(inviteCode);
+        }
         
         // Force a small delay to ensure state updates properly
         setTimeout(() => {
@@ -133,14 +147,23 @@ export default function CreateGamePanel() {
           console.log('Modal state check (will update after render):', showGameCodeModal);
         }, 50);
       };
-      showInviteModal(inviteCode);
       
-      // Also show a toast notification
-      toast({
-        title: "Game Created",
-        description: "Game code is ready to be copied",
-        variant: "default"
-      });
+      showInviteModal();
+      
+      // Only show toast notification for code with private games
+      if (!isPublic && inviteCode) {
+        toast({
+          title: "Game Created",
+          description: "Game code is ready to be copied",
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Game Created",
+          description: "Success! Click 'Go to Match' to begin",
+          variant: "default"
+        });
+      }
     } catch (error) {
       console.error("Failed to create game:", error);
       
@@ -198,37 +221,43 @@ export default function CreateGamePanel() {
           <div className="absolute bottom-0 right-0 w-[2px] h-12 bg-[#00F0FF] animate-pulse shadow-[0_0_8px_rgba(0,240,255,0.8)]">
             <div className="absolute -left-[1px] top-0 w-[4px] h-[4px] rounded-full bg-[#00F0FF] shadow-[0_0_5px_rgba(0,240,255,1)]"></div>
           </div>
-          <div className="absolute bottom-0 right-0 w-12 h-[2px] bg-[#00F0FF] animate-pulse shadow-[0_0_8px_rgba(0,240,255,0.8)]">
-            <div className="absolute -top-[1px] left-0 w-[4px] h-[4px] rounded-full bg-[#00F0FF] shadow-[0_0_5px_rgba(0,240,255,1)]"></div>
+        </div>
+        <div className="absolute top-0 left-0 w-12 h-[2px] bg-[#00F0FF] animate-pulse shadow-[0_0_8px_rgba(0,240,255,0.8)]">
+          <div className="absolute -bottom-[1px] right-0 w-[4px] h-[4px] rounded-full bg-[#00F0FF] shadow-[0_0_5px_rgba(0,240,255,1)]"></div>
+        </div>
+      </div>
+      
+      {/* Bottom right animated corner effect */}
+      <div className="absolute bottom-0 right-0 w-20 h-20">
+        <div className="absolute bottom-0 right-0 w-[2px] h-12 bg-[#00F0FF] animate-pulse shadow-[0_0_8px_rgba(0,240,255,0.8)]">
+          <div className="absolute -left-[1px] top-0 w-[4px] h-[4px] rounded-full bg-[#00F0FF] shadow-[0_0_5px_rgba(0,240,255,1)]"></div>
+        </div>
+        <div className="absolute bottom-0 right-0 w-12 h-[2px] bg-[#00F0FF] animate-pulse shadow-[0_0_8px_rgba(0,240,255,0.8)]">
+          <div className="absolute -top-[1px] left-0 w-[4px] h-[4px] rounded-full bg-[#00F0FF] shadow-[0_0_5px_rgba(0,240,255,1)]"></div>
+        </div>
+      </div>
+      
+      <div className="p-6 border relative bg-[#0E0E10] rounded-xl border-[#00F0FF]/20 text-white backdrop-blur-sm shadow-[0_0_15px_rgba(0,240,255,0.2)]">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#00F0FF] to-[#90D8E4]">
+            Create Game
+          </h2>
+          <div className="flex items-center space-x-2 bg-[#0E0E10]/60 border border-[#00F0FF]/20 rounded-full px-3 py-1 shadow-[0_0_8px_rgba(0,240,255,0.15)]">
+            <span className={`text-xs ${!isPublic ? 'text-[#00F0FF]' : 'text-gray-400'}`}>Private</span>
+            <Switch
+              id="public-toggle"
+              checked={isPublic}
+              onCheckedChange={setIsPublic}
+              className="data-[state=checked]:bg-[#00F0FF] data-[state=unchecked]:bg-[#00F0FF]/60"
+            />
+            <span className={`text-xs ${isPublic ? 'text-[#00F0FF]' : 'text-gray-400'}`}>Public</span>
           </div>
         </div>
         
-        <h2 className="text-2xl font-bold mb-8 relative inline-block">
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#00F0FF] to-[#90D8E4]">CREATE GAME</span>
-          <div className="absolute -bottom-2 left-0 w-full h-[1px] bg-gradient-to-r from-[#00F0FF] to-transparent"></div>
-        </h2>
-        
         <div className="space-y-6">
-          {/* Market Selection */}
-          <div>
-            <label className="block text-lg font-medium text-[#90D8E4] mb-3">Market</label>
-            <Select value={market} onValueChange={setMarket}>
-            <SelectTrigger className="h-14 px-4 text-white rounded-md focus:ring-0 focus:ring-offset-0 focus:border-[#00F0FF]/30 border border-[#00F0FF]/20 shadow-[0_0_8px_rgba(0,240,255,0.15)] backdrop-blur-sm bg-[#0E0E10]/70 hover:border-[#00F0FF]/40 transition-all duration-300">
-                <SelectValue placeholder="Select market" />
-              </SelectTrigger>
-              <SelectContent className="text-white rounded-md shadow-lg bg-[#0E0E10] border border-[#00F0FF]/20">
-                <SelectItem value="ETH-PERP" className="text-white hover:bg-[#00F0FF]/10 py-3 transition-colors duration-200">ETH-PERP</SelectItem>
-                <SelectItem value="BTC-PERP" className="text-white hover:bg-[#00F0FF]/10 py-3 transition-colors duration-200">BTC-PERP</SelectItem>
-                <SelectItem value="SOL-PERP" className="text-white hover:bg-[#00F0FF]/10 py-3 transition-colors duration-200">SOL-PERP</SelectItem>
-                <SelectItem value="XRP-PERP" className="text-white hover:bg-[#00F0FF]/10 py-3 transition-colors duration-200">XRP-PERP</SelectItem>
-                <SelectItem value="BNB-PERP" className="text-white hover:bg-[#00F0FF]/10 py-3 transition-colors duration-200">BNB-PERP</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
           {/* Stake Amount */}
           <div>
-            <label className="block text-lg font-medium text-[#90D8E4] mb-3">Stake Amount</label>
+            <label className="block text-lg font-medium text-[#90D8E4] mb-3">Pot Price (USDC)</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-4 pr-3 text-[#90D8E4]">
                 $
@@ -270,6 +299,23 @@ export default function CreateGamePanel() {
                   USDC
                 </div>
               </div>
+            </div>
+          </div>
+          
+          {/* Principal Amount */}
+          <div>
+            <label className="block text-lg font-medium text-[#90D8E4] mb-3">Principal Amount (USDC)</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-4 pr-3 text-[#90D8E4]">
+                $
+              </div>
+              <Input
+                type="text"
+                value={principal}
+                onChange={(e) => setPrincipal(e.target.value)}
+                placeholder="1000"
+                className="h-14 pl-10 pr-4 text-white rounded-md focus:ring-0 focus:ring-offset-0 focus:border-[#00F0FF]/30 border border-[#00F0FF]/20 shadow-[0_0_8px_rgba(0,240,255,0.15)] backdrop-blur-sm bg-[#0E0E10]/70 hover:border-[#00F0FF]/40 transition-all duration-300"
+              />
             </div>
           </div>
           
@@ -342,17 +388,27 @@ export default function CreateGamePanel() {
               </p>
             </div>
             
-            {/* Game code */}
-            <div className="my-4 p-4 bg-[#0E0E10]/70 rounded-md border border-[#00F0FF]/20 shadow-[0_0_10px_rgba(0,240,255,0.15)] flex justify-between items-center backdrop-blur-sm">
-              <code className="text-lg font-mono text-[#00F0FF]">{gameCode}</code>
-              <Button 
-                onClick={copyGameCode} 
-                className={`ml-4 h-10 px-4 text-white rounded-md transition-all duration-300 border ${isCopied ? 'bg-[#0E0E10]/70 border-green-500/50 text-green-400 shadow-[0_0_10px_rgba(0,255,0,0.2)]' : 'bg-[#0E0E10]/70 border-[#00F0FF]/30 hover:bg-[#00F0FF]/20 hover:border-[#00F0FF]/50 shadow-[0_0_10px_rgba(0,240,255,0.2)]'}`}
-                disabled={isCopied}
-              >
-                {isCopied ? 'Copied!' : 'Copy'}
-              </Button>
-            </div>
+            {/* Game code - only show for private games */}
+            {!isPublic && gameCode && (
+              <div className="my-4 p-4 bg-[#0E0E10]/70 rounded-md border border-[#00F0FF]/20 shadow-[0_0_10px_rgba(0,240,255,0.15)] flex justify-between items-center backdrop-blur-sm">
+                <code className="text-lg font-mono text-[#00F0FF]">{gameCode}</code>
+                <Button 
+                  onClick={copyGameCode} 
+                  className={`ml-4 h-10 px-4 text-white rounded-md transition-all duration-300 border ${isCopied ? 'bg-[#0E0E10]/70 border-green-500/50 text-green-400 shadow-[0_0_10px_rgba(0,255,0,0.2)]' : 'bg-[#0E0E10]/70 border-[#00F0FF]/30 hover:bg-[#00F0FF]/20 hover:border-[#00F0FF]/50 shadow-[0_0_10px_rgba(0,240,255,0.2)]'}`}
+                  disabled={isCopied}
+                >
+                  {isCopied ? 'Copied!' : 'Copy'}
+                </Button>
+              </div>
+            )}
+            
+            {/* Public game message */}
+            {isPublic && (
+              <div className="my-4 p-4 bg-[#0E0E10]/70 rounded-md border border-[#00F0FF]/20 shadow-[0_0_10px_rgba(0,240,255,0.15)] text-center backdrop-blur-sm">
+                <p className="text-[#00F0FF] mb-2">Public Game Created!</p>
+                <p className="text-gray-300 text-sm">Anyone can join your game once you enter the match.</p>
+              </div>
+            )}
             
             {/* Footer */}
             <div className="flex justify-between gap-4 mt-6">

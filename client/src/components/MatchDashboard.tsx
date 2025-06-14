@@ -360,6 +360,7 @@
 
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import MarketsList from "./MarketsList";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -702,6 +703,11 @@ export default function MatchDashboard({ activeMatch }: MatchDashboardProps) {
               <OrderPanel />
             </CardContent>
           </Card>
+          
+          {/* Markets List - Added to the dashboard */}
+          <div className="mt-4 md:mt-6">
+            <MarketsList />
+          </div>
         </div>
 
         {/* Position & Activity */}

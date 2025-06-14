@@ -23,6 +23,7 @@ import CandlestickChartPage from "@/pages/CandlestickChart";
 import NotFound from "@/pages/not-found";
 import About from "@/pages/About";
 import Legal from "@/pages/Legal";
+import TradePage from "@/pages/Trade";
 
 function Router(): JSX.Element {
   console.log('ROUTER: Router component initialized');
@@ -399,6 +400,7 @@ function Router(): JSX.Element {
           <Route path="/about" component={About} />
           <Route path="/legal" component={Legal} />
           <Route path="/charts/:symbol" component={CandlestickChartPage} />
+          <Route path="/trade/:token" component={TradePage} />
           <Route component={NotFound} />
         </Switch>
       </main>

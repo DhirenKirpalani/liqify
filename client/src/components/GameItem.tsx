@@ -31,10 +31,7 @@ export default function GameItem({
 }: GameItemProps) {
   const [, setLocation] = useLocation();
 
-  const handleSpectateClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setLocation(`/match/${id}`);
-  };
+  // Spectate functionality removed as per requirements
 
   const handleGameClick = () => {
     if (onClick) {
@@ -181,17 +178,6 @@ export default function GameItem({
       
       {/* Action buttons */}
       <div className="flex lg:ml-auto mt-2 lg:mt-0 w-full lg:w-auto">
-        {status === 'active' && (
-          <Button 
-            onClick={handleSpectateClick}
-            size="sm"
-            variant="outline"
-            className="bg-transparent border-accent-primary/50 hover:bg-accent-primary/20 text-accent-primary w-full lg:w-auto"
-          >
-            <i className="ri-eye-line mr-1.5"></i>
-            Spectate
-          </Button>
-        )}
         
         {status === 'pending' && (
           <Button 

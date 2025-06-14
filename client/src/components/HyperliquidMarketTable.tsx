@@ -28,11 +28,10 @@ export default function HyperliquidMarketTable() {
   };
 
   return (
-    <Card
-      className="rounded-xl border border-neutral/10"
-      style={{ backgroundColor: '#000C28' }}
-    >
-      <CardContent className="p-4">
+    <div className="p-4 rounded-xl border border-[#333333] bg-[#1A1A1A] shadow-lg overflow-hidden relative">
+      {/* Animated top border effect */}
+      <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-[#00F0FF]/0 via-[#00F0FF]/50 to-[#00F0FF]/0 animate-pulse"></div>
+
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-bold text-white">HYPERLIQUID MARKETS</h3>
           <div className="flex items-center space-x-3">
@@ -106,7 +105,6 @@ export default function HyperliquidMarketTable() {
           )}
           {error && <p className="text-red-500 text-center mt-2">{error}</p>}
         </div>
-      </CardContent>
-    </Card>
+    </div>
   );
 }

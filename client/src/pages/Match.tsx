@@ -539,7 +539,11 @@ export default function Match() {
   if (activeMatch) {
     console.log('MATCH PAGE: Rendering active match state');
     console.log('MATCH PAGE: Debug - activeMatch =', activeMatch);
-    return <MatchDashboard activeMatch={activeMatch} />;
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <MatchDashboard activeMatch={activeMatch} />
+      </div>
+    );
   }
 
   // Fallback (should never reach here)
