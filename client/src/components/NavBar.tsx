@@ -143,6 +143,7 @@ export default function NavBar() {
         }
         
         if (!data || !data.type) return;
+        console.log('WebSocket message received:', data.type, data);
         
         // Handle different notification types
         if (data.type === 'match_found') {
@@ -168,17 +169,47 @@ export default function NavBar() {
             actionUrl: '/'
           });
         }
+        
+        if (data.type === 'match_end') {
+          const isWinner = data.winner === address;
+          addNotification({
+            type: 'match_end',
+            title: isWinner ? 'Victory!' : 'Match Ended',
+            message: isWinner ? 'Congratulations! You won the match.' : 'Better luck next time!',
+            actionUrl: '/games'
+          });
+        }
+        
+        // Handle system notifications
+        if (data.type === 'system') {
+          addNotification({
+            type: 'system',
+            title: data.title || 'System Notification',
+            message: data.message || '',
+            actionUrl: data.actionUrl
+          });
+        }
       } catch (error) {
         console.error('Error processing WebSocket message:', error);
       }
     };
     
+    // Listen for custom events from WebSocket
     window.addEventListener('message', handleWebSocketMessage);
+    
+    // Also listen directly for WebSocket messages from the WebSocketProvider
+    const { socket } = (window as any).__webSocketClient || {};
+    if (socket && socket instanceof WebSocket) {
+      socket.addEventListener('message', handleWebSocketMessage);
+    }
     
     return () => {
       window.removeEventListener('message', handleWebSocketMessage);
+      if (socket && socket instanceof WebSocket) {
+        socket.removeEventListener('message', handleWebSocketMessage);
+      }
     };
-  }, [activeMatch, address, addNotification]);
+  }, [address, activeMatch, addNotification]);
   
   // Define a function to handle scrolling to top with smooth behavior
   const scrollToTop = () => {
@@ -313,11 +344,11 @@ export default function NavBar() {
           <div className="flex items-center gap-3">
             {/* LIQIFY Logo and Brand for desktop - clicking navigates to home */}
             <div 
-              className="hidden md:flex items-center gap-2 mr-8 cursor-pointer" 
+              className="hidden md:flex items-center gap-1 mr-8 cursor-pointer" 
               onClick={handleHomeClick}
             >
-              <Logo size={28} />
-              <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#05d6a9] to-[#04eac2]">LIQIFY</h2>
+              <Logo size={52} />
+              <h2 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#05d6a9] to-[#04eac2]">LIQIFY</h2>
             </div>
             
             {/* Mobile Hamburger Menu */}
@@ -332,7 +363,7 @@ export default function NavBar() {
                   <div className="flex flex-col h-full">
                     <div className="p-4 border-b border-[#05d6a9]/20">
                       <div 
-                        className="flex items-center gap-2 cursor-pointer" 
+                        className="flex items-center gap-1 cursor-pointer" 
                         onClick={() => {
                           setLocation("/"); // Navigate to home
                           setMobileMenuOpen(false);
@@ -343,8 +374,8 @@ export default function NavBar() {
                           }, 300);
                         }}
                       >
-                        <Logo size={24} />
-                        <h3 className="text-lg font-bold text-[#00F0FF]">LIQIFY</h3>
+                        <Logo size={46} />
+                        <h3 className="text-xl font-bold text-[#00F0FF]">LIQIFY</h3>
                       </div>
                     </div>
                     <ScrollArea className="flex-1 p-4">
@@ -441,15 +472,7 @@ export default function NavBar() {
                           <i className="ri-bar-chart-line"></i>
                           <span>Leaderboard</span>
                         </div>
-                        <Link href="/watch" onClick={() => {
-                          setActiveSection(null);
-                          setMobileMenuOpen(false);
-                        }}>
-                          <div className="flex items-center gap-2 py-2 px-4 rounded-lg text-[#808080] hover:text-[#05d6a9]/80 cursor-pointer transition-colors">
-                            <i className="ri-tv-line"></i>
-                            <span>Watch</span>
-                          </div>
-                        </Link>
+                        {/* Watch functionality removed */}
                         <div 
                           onClick={(e) => {
                             e.preventDefault();
@@ -593,11 +616,7 @@ export default function NavBar() {
                 Leaderboard
               </span>
             </a>
-            <Link href="/watch" onClick={() => setActiveSection(null)}>
-              <span className={`text-base font-medium transition-all ${location === '/watch' ? 'text-[#05d6a9] font-semibold' : 'text-[#808080] hover:text-[#05d6a9]/80'}`}>
-                Watch
-              </span>
-            </Link>
+            {/* Watch functionality removed */}
             <Link href="/about" onClick={() => setActiveSection(null)}>
               <span className={`text-base font-medium transition-all ${location === '/about' ? 'text-[#05d6a9] font-semibold' : 'text-[#808080] hover:text-[#05d6a9]/80'}`}>
                 About

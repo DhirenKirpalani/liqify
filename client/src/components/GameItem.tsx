@@ -113,13 +113,13 @@ export default function GameItem({
 
   return (
     <div 
-      className="flex flex-col lg:flex-row lg:items-center justify-between py-3 sm:py-4 px-3 sm:px-5 border border-neutral/10 rounded-lg bg-bg-primary/30 backdrop-blur-sm hover:bg-bg-secondary/20 transition-all duration-300 cursor-pointer gap-2 sm:gap-3 mb-3"
+      className="flex flex-col lg:flex-row lg:items-center justify-between py-3 sm:py-4 px-3 sm:px-5 border border-neutral/10 rounded-lg bg-bg-primary/30 backdrop-blur-sm hover:bg-bg-secondary/20 transition-all duration-300 cursor-pointer gap-2 sm:gap-3 mb-2 sm:mb-3"
       onClick={handleGameClick}
     >
-      <div className="flex items-start sm:items-center flex-col sm:flex-row sm:w-full">
+      <div className="flex items-start sm:items-center flex-col sm:flex-row w-full">
         {/* Status indicator */}
-        <div className="flex-shrink-0 mr-3 mb-2 sm:mb-0">
-          <div className={`text-xs px-2 py-1 rounded-md border ${getStatusStyles()}`}>
+        <div className="flex-shrink-0 mr-2 sm:mr-3 mb-2 sm:mb-0">
+          <div className={`text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md border ${getStatusStyles()}`}>
             {status === 'active' && (
               <span className="inline-flex items-center">
                 <span className="relative flex h-2 w-2 mr-1">
@@ -140,11 +140,11 @@ export default function GameItem({
 
         {/* Match details */}
         <div className="flex-grow">
-          <div className="flex flex-wrap items-center gap-1 mb-1.5">
+          <div className="flex flex-wrap items-center gap-1 mb-1">
             {/* Player 1 with rank */}
             <div className="flex items-center">
               <span className="font-bold text-white">{player1}</span>
-              <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-md border ${getRankBadgeColor(player1Rank)}`}>
+              <span className={`ml-1 sm:ml-1.5 text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded-md border ${getRankBadgeColor(player1Rank)}`}>
                 {formatRank(player1Rank)}
               </span>
             </div>
@@ -154,12 +154,12 @@ export default function GameItem({
             {/* Player 2 with rank */}
             <div className="flex items-center">
               <span className="font-bold text-white">{player2}</span>
-              <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-md border ${getRankBadgeColor(player2Rank)}`}>
+              <span className={`ml-1 sm:ml-1.5 text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded-md border ${getRankBadgeColor(player2Rank)}`}>
                 {formatRank(player2Rank)}
               </span>
             </div>
           </div>
-          <div className="text-xs text-text-secondary flex flex-wrap items-center gap-x-3 gap-y-1">
+          <div className="text-[10px] sm:text-xs text-text-secondary flex flex-wrap items-center gap-x-2 sm:gap-x-3 gap-y-1">
             <div className="flex items-center">
               <i className="ri-coin-line mr-1"></i>
               {market}
@@ -177,7 +177,7 @@ export default function GameItem({
       </div>
       
       {/* Action buttons */}
-      <div className="flex lg:ml-auto mt-2 lg:mt-0 w-full lg:w-auto">
+      <div className="flex justify-center sm:justify-start lg:justify-end lg:ml-auto mt-1.5 lg:mt-0 w-full lg:w-auto">
         
         {status === 'pending' && (
           <Button 

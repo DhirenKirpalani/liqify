@@ -15,9 +15,9 @@ export default function Footer() {
           {/* Logo and Description */}
           <div className="col-span-1">
             <Link href="/">
-              <div className="flex items-center gap-2 mb-2 cursor-pointer">
-                <Logo size={24} />
-                <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#05d6a9] to-[#04eac2]">LIQIFY</h2>
+              <div className="flex items-center gap-1 mb-2 cursor-pointer">
+                <Logo size={48} />
+                <h2 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#05d6a9] to-[#04eac2]">LIQIFY</h2>
               </div>
             </Link>
             <p className="text-text-secondary text-sm">
@@ -113,9 +113,9 @@ export default function Footer() {
           {/* Logo and Description */}
           <div className="w-full">
             <Link href="/">
-              <div className="flex items-center gap-2 mb-2 cursor-pointer">
-                <Logo size={24} />
-                <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#05d6a9] to-[#04eac2]">LIQIFY</h2>
+              <div className="flex items-center gap-1 mb-2 cursor-pointer">
+                <Logo size={48} />
+                <h2 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#05d6a9] to-[#04eac2]">LIQIFY</h2>
               </div>
             </Link>
             <p className="text-text-secondary text-sm break-words pr-2">

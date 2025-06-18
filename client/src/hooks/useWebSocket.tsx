@@ -42,6 +42,10 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
     client.addEventListener('open', handleOpen);
     client.addEventListener('close', handleClose);
     client.addEventListener('error', handleError);
+    
+    // Expose WebSocket client to window for global access and diagnostics
+    // This helps ensure notifications work properly
+    (window as any).__webSocketClient = client;
 
     return () => {
       client.removeEventListener('open', handleOpen);

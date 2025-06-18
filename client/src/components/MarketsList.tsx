@@ -131,7 +131,8 @@ export default function MarketsList() {
   if (error) return <div className="text-center py-10 text-red-500"><AlertCircle className="inline mr-2" />{error}</div>;
 
   return (
-    <div className="p-5 rounded-xl border border-neutral/10 bg-gradient-to-r from-indigo-950/30 to-black/50 backdrop-blur-sm shadow-lg">
+    <div className="p-5 rounded-xl border border-neutral/10 bg-gradient-to-r from-indigo-950/30 to-black/50 backdrop-blur-sm shadow-lg mb-16">
+      <h2 className="text-xl font-bold text-white mb-4">Markets</h2>
       <table className="w-full mt-4 border-separate border-spacing-y-2.5">
         <thead>
           <tr className="border-b border-neutral-800">

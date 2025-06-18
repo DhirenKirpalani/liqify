@@ -326,7 +326,7 @@ export default function Games() {
   return (
     <div className="text-[#F2F2F2] mt-2 overflow-visible">
       {/* Main Content */}
-      <div className="container mx-auto px-4 pt-3 pb-6 max-w-screen-xl relative z-10">
+      <div className="container mx-auto px-2 sm:px-4 pt-2 sm:pt-3 pb-6 max-w-screen-xl relative z-10">
         {/* Wallet Connect Modal */}
         <WalletConnectModal show={showModal} onClose={() => setShowModal(false)} />
 
@@ -335,15 +335,15 @@ export default function Games() {
           <PostMatchSummary />
         ) : (
           // Main Layout
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
             {/* Left Column - Create Game */}
             <div className="md:col-span-1">
-              <div className="backdrop-blur-md bg-[#0E0E10]/40 rounded-xl border border-[#00F0FF]/20 shadow-[0_0_15px_rgba(0,240,255,0.15)] overflow-hidden relative p-1">
+              <div className="backdrop-blur-md bg-[#0E0E10]/40 rounded-lg sm:rounded-xl border border-[#00F0FF]/20 shadow-[0_0_15px_rgba(0,240,255,0.15)] overflow-hidden relative p-1">
                 <CreateGamePanel />
               </div>
               
               {/* Join with Code Section */}
-              <div className="mt-4 backdrop-blur-md bg-[#0E0E10]/40 rounded-xl border border-[#05d6a9]/30 p-6 shadow-[0_0_20px_rgba(5,214,169,0.15)] overflow-hidden relative">
+              <div className="mt-3 sm:mt-4 backdrop-blur-md bg-[#0E0E10]/40 rounded-lg sm:rounded-xl border border-[#05d6a9]/30 p-4 sm:p-6 shadow-[0_0_20px_rgba(5,214,169,0.15)] overflow-hidden relative">
                 {/* Animated corner effect */}
                 <div className="absolute bottom-0 right-0 w-20 h-20">
                   <div className="absolute bottom-0 right-0 w-[2px] h-12 bg-[#05d6a9] animate-pulse shadow-[0_0_8px_rgba(5,214,169,0.8)]">
@@ -354,7 +354,7 @@ export default function Games() {
                   </div>
                 </div>
                 
-                <h2 className="text-xl font-bold mb-4 relative inline-block">
+                <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 relative inline-block">
                   <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#05d6a9] to-[#04eac2]">JOIN WITH CODE</span>
                   <div className="absolute -bottom-2 left-0 w-full h-[1px] bg-gradient-to-r from-[#05d6a9] to-transparent"></div>
                 </h2>
@@ -363,7 +363,7 @@ export default function Games() {
               </div>
               
               {/* Games Section */}
-              <div className="mt-8 backdrop-blur-md bg-[#0E0E10]/50 rounded-xl border border-[#CC33FF]/30 p-6 shadow-[0_0_20px_rgba(204,51,255,0.15)] overflow-hidden relative">
+              <div className="mt-3 sm:mt-6 backdrop-blur-md bg-[#0E0E10]/50 rounded-lg sm:rounded-xl border border-[#CC33FF]/30 p-4 sm:p-6 shadow-[0_0_20px_rgba(204,51,255,0.15)] overflow-hidden relative">
                 {/* Animated corner effect */}
                 <div className="absolute bottom-0 left-0 w-20 h-20">
                   <div className="absolute bottom-0 left-0 w-[2px] h-12 bg-[#CC33FF] animate-pulse shadow-[0_0_8px_rgba(204,51,255,0.8)]">
@@ -384,7 +384,7 @@ export default function Games() {
                   </div>
                 </div>
                 
-                <h2 className="text-2xl font-bold mb-6 relative inline-block">
+                <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-6 relative inline-block">
                   <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#00F0FF] to-[#90D8E4]">GAMES</span>
                   <div className="absolute -bottom-2 left-0 w-full h-[1px] bg-gradient-to-r from-[#00F0FF] to-transparent"></div>
                 </h2>
@@ -485,9 +485,9 @@ export default function Games() {
             </div>
             
             {/* Middle & Right Columns - Chart and Market Data */}
-            <div className="md:col-span-2 space-y-8">
+            <div className="md:col-span-2 space-y-4 sm:space-y-6 md:space-y-8">
               {/* Trading Chart with Market Selection */}
-              <div className="backdrop-blur-md bg-[#0E0E10]/30 rounded-xl border border-[#90D8E4]/20 shadow-[0_0_15px_rgba(144,216,228,0.15)] overflow-hidden relative p-1">
+              <div className="backdrop-blur-md bg-[#0E0E10]/30 rounded-lg sm:rounded-xl border border-[#90D8E4]/20 shadow-[0_0_15px_rgba(144,216,228,0.15)] overflow-hidden relative p-1">
                 <div className="absolute top-0 right-0 w-24 h-24">
                   <div className="absolute top-0 right-0 w-[2px] h-12 bg-[#90D8E4] shadow-[0_0_8px_rgba(144,216,228,0.6)]"></div>
                   <div className="absolute top-0 right-0 w-12 h-[2px] bg-[#90D8E4] shadow-[0_0_8px_rgba(144,216,228,0.6)]"></div>
@@ -496,7 +496,7 @@ export default function Games() {
               </div>
               
               {/* Market Table */}
-              <div className="backdrop-blur-md bg-[#0E0E10]/40 rounded-xl border border-[#FFCC00]/20 shadow-[0_0_15px_rgba(255,204,0,0.1)] overflow-hidden relative p-1">
+              <div className="backdrop-blur-md bg-[#0E0E10]/40 rounded-lg sm:rounded-xl border border-[#FFCC00]/20 shadow-[0_0_15px_rgba(255,204,0,0.1)] overflow-hidden relative p-1">
                 <div className="absolute bottom-0 left-0 w-24 h-24">
                   <div className="absolute bottom-0 left-0 w-[2px] h-12 bg-[#FFCC00] shadow-[0_0_8px_rgba(255,204,0,0.6)]"></div>
                   <div className="absolute bottom-0 left-0 w-12 h-[2px] bg-[#FFCC00] shadow-[0_0_8px_rgba(255,204,0,0.6)]"></div>
@@ -505,7 +505,7 @@ export default function Games() {
               </div>
               
               {/* Hyperliquid Market Table */}
-              <div className="backdrop-blur-md bg-[#0E0E10]/40 rounded-xl border border-[#00F0FF]/20 shadow-[0_0_15px_rgba(0,240,255,0.1)] overflow-hidden relative p-1">
+              <div className="backdrop-blur-md bg-[#0E0E10]/40 rounded-lg sm:rounded-xl border border-[#00F0FF]/20 shadow-[0_0_15px_rgba(0,240,255,0.1)] overflow-hidden relative p-1">
                 <div className="absolute top-0 right-0 w-24 h-24">
                   <div className="absolute top-0 right-0 w-[2px] h-12 bg-[#00F0FF] shadow-[0_0_8px_rgba(0,240,255,0.6)]"></div>
                   <div className="absolute top-0 right-0 w-12 h-[2px] bg-[#00F0FF] shadow-[0_0_8px_rgba(0,240,255,0.6)]"></div>
@@ -514,7 +514,7 @@ export default function Games() {
               </div>
               
               {/* Leaderboard Preview */}
-              <div id="leaderboard-section" className="backdrop-blur-md bg-[#0E0E10]/40 rounded-xl border border-[#FF6600]/20 shadow-[0_0_15px_rgba(255,102,0,0.1)] overflow-hidden relative p-1">
+              <div id="leaderboard-section" className="backdrop-blur-md bg-[#0E0E10]/40 rounded-lg sm:rounded-xl border border-[#FF6600]/20 shadow-[0_0_15px_rgba(255,102,0,0.1)] overflow-hidden relative p-1">
                 <div className="absolute top-0 left-0 w-24 h-24">
                   <div className="absolute top-0 left-0 w-[2px] h-12 bg-[#FF6600] shadow-[0_0_8px_rgba(255,102,0,0.6)]"></div>
                   <div className="absolute top-0 left-0 w-12 h-[2px] bg-[#FF6600] shadow-[0_0_8px_rgba(255,102,0,0.6)]"></div>
