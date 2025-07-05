@@ -1,0 +1,26 @@
+{
+  "include": ["client/src/**/*", "shared/**/*", "server/**/*"],
+  "compilerOptions": {
+    "incremental": true,
+    "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "node",
+    "target": "ESNext",
+    "module": "ESNext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["client/src/*"],
+      "@shared/*": ["shared/*"],
+      "@assets/*": ["attached_assets/*"]
+    },
+    "types": ["node", "react", "react-dom", "vite/client"],
+    "lib": ["DOM", "DOM.Iterable", "ESNext"]
+  }
+}
