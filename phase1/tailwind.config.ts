@@ -2,7 +2,11 @@ import type { Config } from "tailwindcss";
 
 export default {
   darkMode: ["class"],
-  content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
+  content: [
+    './pages/**/*.{js,ts,jsx,tsx}',
+    './components/**/*.{js,ts,jsx,tsx}',
+    './app/**/*.{js,ts,jsx,tsx}',
+  ],
   theme: {
     extend: {
       borderRadius: {
@@ -44,6 +48,17 @@ export default {
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
+        // Custom vibrant gaming colors
+        "dark-bg": "var(--dark-bg)",
+        "dark-card": "var(--dark-card)",
+        "dark-border": "var(--dark-border)",
+        "electric-purple": "var(--electric-purple)",
+        "deep-purple": "var(--deep-purple)",
+        "cyber-blue": "var(--cyber-blue)",
+        "electric-blue": "var(--electric-blue)",
+        "neon-cyan": "var(--neon-cyan)",
+        "vibrant-green": "var(--vibrant-green)",
+        "warning-orange": "var(--warning-orange)",
         chart: {
           "1": "var(--chart-1)",
           "2": "var(--chart-2)",

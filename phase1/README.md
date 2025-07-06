@@ -7,20 +7,20 @@ LIQIFY is a gamified Solana-connected trading competition platform where users s
 ## System Architecture
 
 ### Frontend Architecture
-- **Framework**: React 18 with TypeScript
-- **Routing**: Wouter for client-side routing
+- **Framework**: Next.js 14 with React 18 and strict TypeScript
+- **Routing**: Next.js Pages Router for navigation
 - **Styling**: Tailwind CSS with custom dark theme and gaming aesthetics
 - **UI Components**: Radix UI primitives with shadcn/ui component library
 - **State Management**: TanStack React Query for server state
-- **Build Tool**: Vite with custom configuration for development and production
+- **Rendering**: Hybrid rendering with client-side components for interactive elements
 
 ### Backend Architecture
-- **Runtime**: Node.js with Express.js framework
+- **API Routes**: Next.js API routes for serverless functions
 - **Language**: TypeScript with ES modules
 - **Database**: PostgreSQL with Drizzle ORM
 - **Database Provider**: Neon Database (@neondatabase/serverless)
 - **Session Management**: In-memory storage with planned PostgreSQL integration
-- **Development**: TSX for TypeScript execution in development
+- **Development**: Next.js development server with hot module replacement
 
 ### Key Components
 
@@ -35,8 +35,8 @@ LIQIFY is a gamified Solana-connected trading competition platform where users s
 #### Backend Components
 1. **Storage Interface**: Abstracted CRUD operations for user management
 2. **Memory Storage**: In-memory implementation for development
-3. **Route Registration**: Express route setup with HTTP server creation
-4. **Vite Integration**: Development server with HMR support
+3. **API Routes**: Next.js API endpoints for data operations
+4. **Server-Side Rendering**: SSR capabilities for improved SEO and performance
 
 ## Data Flow
 
@@ -64,26 +64,25 @@ LIQIFY is a gamified Solana-connected trading competition platform where users s
 - **Icons**: Lucide React for consistent iconography
 
 ### Development Dependencies
-- **TypeScript**: Full type safety across frontend and backend
-- **Vite**: Fast development server and build tool
+- **TypeScript**: Full type safety across frontend and backend with strict mode enabled
+- **Next.js**: Unified framework for both frontend and API routes
 - **Drizzle Kit**: Database migrations and schema management
-- **ESBuild**: Production backend bundling
+- **ESLint**: Code quality and style enforcement
 
 ## Deployment Strategy
 
 ### Build Process
-1. **Frontend**: Vite builds React application to `dist/public`
-2. **Backend**: ESBuild bundles Express server to `dist/index.js`
+1. **Next.js Build**: `next build` creates optimized production build
+2. **Static Assets**: Static files served from `/public` directory
 3. **Database**: Drizzle migrations applied via `drizzle-kit push`
 
 ### Environment Configuration
-- **Development**: TSX runs TypeScript directly with Vite dev server
-- **Production**: Node.js serves bundled JavaScript with static file serving
+- **Development**: Next.js dev server with hot module replacement
+- **Production**: Next.js server or static export depending on hosting platform
 - **Database**: PostgreSQL connection via `DATABASE_URL` environment variable
 
 ### Deployment Architecture
-The application follows a monorepo structure with:
-- Shared TypeScript types and schemas
-- Client-side React application
-- Server-side Express API
+The application follows a unified Next.js structure with:
+- Next.js pages for routing and UI
+- API routes for backend functionality
 - Database schema and migrations

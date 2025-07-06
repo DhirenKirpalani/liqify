@@ -1,10 +1,19 @@
 {
-  "include": ["client/src/**/*", "shared/**/*", "server/**/*"],
+  "include": [
+    "shared/**/*",
+    "server/**/*",
+    "pages/**/*",
+    "components/**/*",
+    "hooks/**/*",
+    "lib/**/*",
+    "types/**/*",
+    "app/**/*"
+  ],
   "compilerOptions": {
     "incremental": true,
     "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo",
     "noEmit": true,
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     "moduleResolution": "node",
     "target": "ESNext",
     "module": "ESNext",
@@ -16,11 +25,47 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["client/src/*"],
-      "@shared/*": ["shared/*"],
-      "@assets/*": ["attached_assets/*"]
+      "@/*": [
+        "."
+      ],
+      "@/components/*": [
+        "components/*"
+      ],
+      "@/pages/*": [
+        "pages/*"
+      ],
+      "@shared/*": [
+        "shared/*"
+      ],
+      "@assets/*": [
+        "attached_assets/*"
+      ],
+      "@/public/*": [
+        "public/*"
+      ],
+      "@/hooks/*": [
+        "hooks/*"
+      ],
+      "@/lib/*": [
+        "lib/*"
+      ],
+      "@/types/*": [
+        "types/*"
+      ]
     },
-    "types": ["node", "react", "react-dom", "vite/client"],
-    "lib": ["DOM", "DOM.Iterable", "ESNext"]
-  }
+    "types": [
+      "node",
+      "react",
+      "react-dom"
+    ],
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ESNext"
+    ],
+    "allowJs": true
+  },
+  "exclude": [
+    "node_modules"
+  ]
 }
