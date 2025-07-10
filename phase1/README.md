@@ -8,14 +8,14 @@ LIQIFY is a gamified Solana-connected trading competition platform where users s
 
 ### Frontend Architecture
 - **Framework**: Next.js 14 with React 18 and strict TypeScript
-- **Routing**: Next.js Pages Router for navigation
+- **Routing**: Next.js App Router for advanced routing and layouts
 - **Styling**: Tailwind CSS with custom dark theme and gaming aesthetics
 - **UI Components**: Radix UI primitives with shadcn/ui component library
 - **State Management**: TanStack React Query for server state
-- **Rendering**: Hybrid rendering with client-side components for interactive elements
+- **Rendering**: Server Components with Client Components for interactive elements
 
 ### Backend Architecture
-- **API Routes**: Next.js API routes for serverless functions
+- **API Routes**: Next.js Route Handlers in the App Router
 - **Language**: TypeScript with ES modules
 - **Database**: PostgreSQL with Drizzle ORM
 - **Database Provider**: Neon Database (@neondatabase/serverless)
@@ -82,7 +82,26 @@ LIQIFY is a gamified Solana-connected trading competition platform where users s
 - **Database**: PostgreSQL connection via `DATABASE_URL` environment variable
 
 ### Deployment Architecture
-The application follows a unified Next.js structure with:
-- Next.js pages for routing and UI
-- API routes for backend functionality
+The application follows a unified Next.js App Router structure with:
+- Next.js app directory for routing and UI components
+- Route Handlers for backend functionality
+- Server and Client Components for optimal rendering
 - Database schema and migrations
+
+## App Router Architecture
+
+### Folder Structure
+- **/app**: Contains all routes and layouts following Next.js App Router conventions
+  - Each route has its own directory with a `page.tsx` file
+  - Shared layouts are defined with `layout.tsx` files
+  - Special files like `not-found.tsx` for 404 handling
+- **/components**: Shared UI components used across routes
+- **/lib**: Utility functions and shared logic
+- **/styles**: Global CSS and Tailwind configuration
+- **/public**: Static assets
+
+### Component Architecture
+- **Server Components**: Default for most route components, providing better performance and SEO
+- **Client Components**: Marked with "use client" directive for interactive UI features
+- **Layouts**: Persistent UI between route changes with nested layouts
+- **Providers**: Client-side providers separated into dedicated components for proper hydration

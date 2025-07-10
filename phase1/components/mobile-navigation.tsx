@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Home, Trophy, BookOpen, Users, User, Bell } from 'lucide-react';
-import { useRouter } from 'next/router';
+import { useRouter, usePathname } from 'next/navigation';
 import { useWallet } from './wallet-provider';
 import { useNotifications } from './notification-modal';
 import { useSplashScreen } from './splash-screen';
@@ -11,6 +11,7 @@ export function MobileNavigation() {
   const { connected, connect } = useWallet();
   const { unreadCount } = useNotifications();
   const router = useRouter();
+  const pathname = usePathname();
   const [isNotificationActive, setIsNotificationActive] = React.useState(false);
   const { isVisible: splashVisible } = useSplashScreen();
   // Default to 'lobby' for initial server render to avoid hydration mismatch
@@ -34,7 +35,7 @@ export function MobileNavigation() {
     setActiveSection(sectionId);
     
     // Check if we're on the home page
-    if (router.pathname === '/') {
+    if (pathname === '/') {
       // If on home page, just scroll to the section
       const element = document.getElementById(sectionId);
       if (element) {

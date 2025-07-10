@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
+import { useRouter, usePathname } from 'next/navigation';
 import { useWallet } from './wallet-provider';
 import { useNotifications } from './notification-modal';
 import { Button } from './ui/button';
@@ -18,6 +18,7 @@ export function Navigation() {
   const [notificationOpen, setNotificationOpen] = React.useState(false);
   const { isVisible: splashVisible } = useSplashScreen();
   const router = useRouter();
+  const pathname = usePathname();
   
   // Initialize with a default value to avoid hydration mismatch
   const [activeSection, setActiveSection] = React.useState('lobby');
@@ -54,7 +55,7 @@ export function Navigation() {
     setActiveSection(sectionId);
     
     // Check if we're on the home page
-    if (router.pathname === '/') {
+    if (pathname === '/') {
       // If on home page, just scroll to the section
       const element = document.getElementById(sectionId);
       if (element) {
