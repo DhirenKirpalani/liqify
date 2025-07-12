@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useWallet } from './wallet-provider';
 import { useNotifications } from './notification-modal';
+import { useAdminStatus } from '../hooks/useAdminStatus';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { Bell, CheckCircle, AlertTriangle, Info, User } from 'lucide-react';
+import { Bell, CheckCircle, AlertTriangle, Info, User, ShieldCheck } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
 import Image from 'next/image';
 import { useSplashScreen } from './splash-screen';
@@ -17,6 +18,7 @@ export function Navigation() {
   const { notifications, clearNotifications, unreadCount } = useNotifications();
   const [notificationOpen, setNotificationOpen] = React.useState(false);
   const { isVisible: splashVisible } = useSplashScreen();
+  const { isAdmin } = useAdminStatus();
   const router = useRouter();
   const pathname = usePathname();
   
@@ -97,6 +99,14 @@ export function Navigation() {
             >
               Leaderboard
             </button>
+            {connected && isAdmin && (
+              <Link 
+                href="/admin"
+                className="text-warning-orange hover:text-warning-orange/80 transition-colors"
+              >
+                Admin
+              </Link>
+            )}
           </div>
           <div className="flex items-center space-x-4">
             {/* Notification Dialog - hidden on mobile */}
@@ -193,6 +203,19 @@ export function Navigation() {
                 <User className="h-7 w-7 text-gray-400 transition-colors group-hover:text-electric-purple" />
               </Button>
             </Link>
+            
+            {/* Admin button - only shown on mobile when connected and is admin */}
+            {connected && isAdmin && (
+              <Link href="/admin" className="md:hidden flex items-center">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`hover:bg-dark-card/50 transition-colors p-2 group mr-2 ${pathname.startsWith('/admin') ? 'bg-dark-card/50' : ''}`}
+                >
+                  <ShieldCheck className={`h-5 w-5 transition-colors ${pathname.startsWith('/admin') ? 'text-warning-orange' : 'text-gray-400 group-hover:text-warning-orange'}`} />
+                </Button>
+              </Link>
+            )}
             
             <Button
               onClick={connected ? disconnect : connect}

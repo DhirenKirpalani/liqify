@@ -7,12 +7,16 @@ import { useWallet } from '@/components/wallet-provider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { User, Wallet, Trophy, TrendingUp, Calendar, Shield } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { User, Wallet, Trophy, TrendingUp, Calendar, Shield, Edit2, Copy, Check } from 'lucide-react';
 import Image from 'next/image';
 
 export default function Profile() {
   const { connected, publicKey, connect } = useWallet();
   const [isMobile, setIsMobile] = useState(false);
+  const [username, setUsername] = useState('');
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [copiedToClipboard, setCopiedToClipboard] = useState(false);
   
   useEffect(() => {
     // Check if window is defined (browser environment)
@@ -31,6 +35,31 @@ export default function Profile() {
       return () => window.removeEventListener('resize', handleResize);
     }
   }, []);
+  
+  useEffect(() => {
+    // Load username from localStorage when wallet is connected
+    if (connected && publicKey) {
+      const savedUsername = localStorage.getItem(`username-${publicKey}`);
+      if (savedUsername) {
+        setUsername(savedUsername);
+      }
+    }
+  }, [connected, publicKey]);
+  
+  const saveUsername = () => {
+    if (connected && publicKey && username.trim()) {
+      localStorage.setItem(`username-${publicKey}`, username.trim());
+      setIsEditingUsername(false);
+    }
+  };
+  
+  const copyWalletAddress = () => {
+    if (publicKey) {
+      navigator.clipboard.writeText(publicKey);
+      setCopiedToClipboard(true);
+      setTimeout(() => setCopiedToClipboard(false), 2000);
+    }
+  };
 
   if (!connected) {
     return (
@@ -73,17 +102,63 @@ export default function Profile() {
               <User className="h-10 w-10 text-white" />
             </div>
             <div className="max-w-full">
-              <h1 className="text-3xl font-bold gradient-text-primary">Trading Profile</h1>
-              <p className="text-gray-400 text-sm">
-                <span className="inline-block">Wallet:</span>
-                <span className="inline-block ml-1 break-all">
-                  {typeof publicKey === 'string' ? 
-                    (isMobile ? 
-                      `${publicKey.substring(0, 10)}...${publicKey.substring(publicKey.length - 6)}` : 
-                      publicKey)
-                    : 'Not connected'}
-                </span>
-              </p>
+              {isEditingUsername ? (
+                <div className="flex items-center mb-2 gap-2">
+                  <Input 
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Enter your username"
+                    className="w-60 bg-dark-bg/50 border-cyber-blue/30 text-white"
+                    autoFocus
+                  />
+                  <Button 
+                    onClick={saveUsername}
+                    className="bg-cyber-blue hover:bg-cyber-blue/80"
+                    size="sm"
+                  >
+                    Save
+                  </Button>
+                  <Button 
+                    onClick={() => setIsEditingUsername(false)}
+                    variant="ghost" 
+                    size="sm"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center mb-1">
+                  <h1 className="text-3xl font-bold gradient-text-primary">
+                    {username ? username : 'Trader'}
+                  </h1>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setIsEditingUsername(true)}
+                    className="ml-2 text-gray-400 hover:text-white"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+              <div className="flex items-center">
+                <p className="text-gray-400 text-sm">
+                  <span className="inline-block">Wallet:</span>
+                  <span className="inline-block ml-1 font-mono">
+                    {typeof publicKey === 'string' ? 
+                      `${publicKey.substring(0, 6)}...${publicKey.substring(publicKey.length - 4)}` : 
+                      'Not connected'}
+                  </span>
+                </p>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={copyWalletAddress}
+                  className="ml-1 text-gray-400 hover:text-white p-1 h-auto"
+                >
+                  {copiedToClipboard ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                </Button>
+              </div>
             </div>
           </div>
         </div>

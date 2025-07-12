@@ -1,3 +1,9 @@
 {
-  "/page": "app/page.js"
+  "/games/page": "app/games/page.js",
+  "/page": "app/page.js",
+  "/api/check-admin/route": "app/api/check-admin/route.js",
+  "/about/page": "app/about/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/admin/tournaments/page": "app/admin/tournaments/page.js"
 }
