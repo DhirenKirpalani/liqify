@@ -1,16 +1,4 @@
 {
-  "app\\dashboard\\page.tsx -> @/components/mobile-navigation": {
-    "id": "app\\dashboard\\page.tsx -> @/components/mobile-navigation",
-    "files": [
-      "static/chunks/_app-pages-browser_components_mobile-navigation_tsx-_afd22.js"
-    ]
-  },
-  "app\\dashboard\\page.tsx -> @/components/navigation": {
-    "id": "app\\dashboard\\page.tsx -> @/components/navigation",
-    "files": [
-      "static/chunks/_app-pages-browser_components_navigation_tsx-_0f7c2.js"
-    ]
-  },
   "app\\games\\page.tsx -> @/components/mobile-navigation": {
     "id": "app\\games\\page.tsx -> @/components/mobile-navigation",
     "files": [

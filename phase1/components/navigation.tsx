@@ -102,7 +102,7 @@ export function Navigation() {
             {connected && isAdmin && (
               <Link 
                 href="/admin"
-                className="text-warning-orange hover:text-warning-orange/80 transition-colors"
+                className={`transition-colors hover:text-warning-orange ${pathname.startsWith('/admin') ? 'text-warning-orange' : 'text-white'}`}
               >
                 Admin
               </Link>
